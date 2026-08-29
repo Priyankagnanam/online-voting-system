@@ -1,6 +1,7 @@
 const Election = require("../models/Election");
 const Candidate = require("../models/Candidate");
 const Vote = require("../models/Vote");
+const logger = require("../utils/logger");
 
 const getActiveElections = async (req, res) => {
   try {
@@ -26,7 +27,7 @@ const getActiveElections = async (req, res) => {
 
     res.json({ elections: electionsWithCounts });
   } catch (error) {
-    console.error("Get active elections error:", error.message);
+    logger.error("Get active elections error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -55,7 +56,7 @@ const getVoterElectionDetails = async (req, res) => {
       hasVoted: !!hasVoted,
     });
   } catch (error) {
-    console.error("Get election details error:", error.message);
+    logger.error("Get election details error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -68,7 +69,7 @@ const getVoterStats = async (req, res) => {
 
     res.json({ activeElections, totalElections, votedElections });
   } catch (error) {
-    console.error("Get voter stats error:", error.message);
+    logger.error("Get voter stats error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });
   }
 };

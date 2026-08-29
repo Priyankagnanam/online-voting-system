@@ -3,6 +3,7 @@ const OTP = require("../models/OTP");
 const generateOTP = require("../utils/generateOTP");
 const { sendOTP } = require("../services/email");
 const { recordLoginAttempt } = require("../services/riskDetection");
+const logger = require("../utils/logger");
 
 const register = async (req, res) => {
   try {
@@ -30,7 +31,7 @@ const register = async (req, res) => {
       userId: user._id,
     });
   } catch (error) {
-    console.error("Register error:", error.message);
+    logger.error("Register error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error during registration" });
   }
 };
@@ -65,7 +66,7 @@ const verifyOTP = async (req, res) => {
 
     res.json({ message: "OTP verified. You may now reset your password." });
   } catch (error) {
-    console.error("Verify OTP error:", error.message);
+    logger.error("Verify OTP error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error during OTP verification" });
   }
 };
@@ -112,7 +113,7 @@ const login = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Login error:", error.message);
+    logger.error("Login error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error during login" });
   }
 };
@@ -138,7 +139,7 @@ const forgotPassword = async (req, res) => {
 
     res.json({ message: "OTP sent to your email for password reset" });
   } catch (error) {
-    console.error("Forgot password error:", error.message);
+    logger.error("Forgot password error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -172,7 +173,7 @@ const resetPassword = async (req, res) => {
 
     res.json({ message: "Password reset successful. You can now log in." });
   } catch (error) {
-    console.error("Reset password error:", error.message);
+    logger.error("Reset password error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error during password reset" });
   }
 };

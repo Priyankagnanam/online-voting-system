@@ -1,5 +1,6 @@
 const Candidate = require("../models/Candidate");
 const Election = require("../models/Election");
+const logger = require("../utils/logger");
 
 const createCandidate = async (req, res) => {
   try {
@@ -19,7 +20,7 @@ const createCandidate = async (req, res) => {
 
     res.status(201).json({ message: "Candidate added", candidate });
   } catch (error) {
-    console.error("Create candidate error:", error.message);
+    logger.error("Create candidate error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -29,7 +30,7 @@ const getCandidatesByElection = async (req, res) => {
     const candidates = await Candidate.find({ electionId: req.params.electionId });
     res.json({ candidates });
   } catch (error) {
-    console.error("Get candidates error:", error.message);
+    logger.error("Get candidates error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -42,7 +43,7 @@ const getAllCandidates = async (req, res) => {
 
     res.json({ candidates });
   } catch (error) {
-    console.error("Get all candidates error:", error.message);
+    logger.error("Get all candidates error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -60,7 +61,7 @@ const getCandidateById = async (req, res) => {
 
     res.json({ candidate });
   } catch (error) {
-    console.error("Get candidate error:", error.message);
+    logger.error("Get candidate error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -82,7 +83,7 @@ const updateCandidate = async (req, res) => {
 
     res.json({ message: "Candidate updated", candidate });
   } catch (error) {
-    console.error("Update candidate error:", error.message);
+    logger.error("Update candidate error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -98,7 +99,7 @@ const deleteCandidate = async (req, res) => {
 
     res.json({ message: "Candidate deleted" });
   } catch (error) {
-    console.error("Delete candidate error:", error.message);
+    logger.error("Delete candidate error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });
   }
 };

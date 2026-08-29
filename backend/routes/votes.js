@@ -3,6 +3,7 @@ const { body } = require("express-validator");
 const validate = require("../middleware/validate");
 const auth = require("../middleware/auth");
 const role = require("../middleware/role");
+const validateObjectId = require("../middleware/validateObjectId");
 const { castVote, getVoteResults } = require("../controllers/voteController");
 
 const router = express.Router();
@@ -19,6 +20,6 @@ router.post(
   castVote
 );
 
-router.get("/results/:electionId", auth, getVoteResults);
+router.get("/results/:electionId", auth, validateObjectId('electionId'), getVoteResults);
 
 module.exports = router;

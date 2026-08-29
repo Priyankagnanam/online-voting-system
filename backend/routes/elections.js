@@ -3,6 +3,7 @@ const { body } = require("express-validator");
 const validate = require("../middleware/validate");
 const auth = require("../middleware/auth");
 const role = require("../middleware/role");
+const validateObjectId = require("../middleware/validateObjectId");
 const {
   createElection,
   getElections,
@@ -15,7 +16,7 @@ const {
 const router = express.Router();
 
 router.get("/", auth, getElections);
-router.get("/:id", auth, getElectionById);
+router.get("/:id", auth, validateObjectId(), getElectionById);
 
 router.post(
   "/",
@@ -34,6 +35,7 @@ router.put(
   "/:id",
   auth,
   role("admin"),
+  validateObjectId(),
   updateElection
 );
 
@@ -41,6 +43,7 @@ router.delete(
   "/:id",
   auth,
   role("admin"),
+  validateObjectId(),
   deleteElection
 );
 
@@ -48,6 +51,7 @@ router.patch(
   "/:id/status",
   auth,
   role("admin"),
+  validateObjectId(),
   [body("status").isIn(["upcoming", "active", "ended"]).withMessage("Invalid status")],
   validate,
   updateElectionStatus

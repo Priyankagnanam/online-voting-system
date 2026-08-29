@@ -1,35 +1,37 @@
 const nodemailer = require("nodemailer");
+const logger = require("../utils/logger");
 
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: parseInt(process.env.EMAIL_PORT, 10),
-  secure: false,
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT, 10),
+  secure: process.env.SMTP_SECURE === 'true',
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASSWORD,
   },
 });
 
 const sendEmail = async (to, subject, text) => {
   try {
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: process.env.SMTP_USER,
       to,
       subject,
       text,
     });
-    console.log(`Email sent to ${to}`);
+    logger.info(`Email sent to ${to}`);
     return true;
   } catch (error) {
-    console.error(`Email send error: ${error.message}`);
-    if (process.env.NODE_ENV !== "production") {
-      console.log("--------------------------------------------------");
-      console.log("DEV FALLBACK - email delivery failed, contents shown below:");
-      console.log(`  To:      ${to}`);
-      console.log(`  Subject: ${subject}`);
-      console.log("  Body:");
-      console.log(text);
-      console.log("--------------------------------------------------");
+    logger.error(`Email send error: ${error.message}`);
+    if (process.env.OTP_DEV_MODE === "true" && process.env.NODE_ENV !== "production") {
+      logger.info("--------------------------------------------------");
+      logger.info("DEV FALLBACK - email delivery failed, contents shown below:");
+      logger.info(`  To:      ${to}`);
+      logger.info(`  Subject: ${subject}`);
+      logger.info("  Body:");
+      logger.info(text);
+      logger.info("--------------------------------------------------");
+      return true; // Pretend it succeeded in explicitly configured dev mode
     }
     return false;
   }

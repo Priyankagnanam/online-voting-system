@@ -1,20 +1,17 @@
-const mongoose = require("mongoose");
-
-let isConnected = false;
+const mongoose = require('mongoose');
+const logger = require('../utils/logger');
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI);
-    isConnected = true;
-    console.log(`MongoDB connected: ${conn.connection.host}`);
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+    logger.info(`MongoDB connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error(`MongoDB connection failed: ${error.message}`);
-    console.error("Server will start but database features will not work.");
-    console.error("Please install MongoDB or set MONGODB_URI in .env");
+    logger.error(`MongoDB connection failed: ${error.message}`);
+    process.exit(1);
   }
 };
 
-const getDBStatus = () => isConnected;
-
 module.exports = connectDB;
-module.exports.getDBStatus = getDBStatus;

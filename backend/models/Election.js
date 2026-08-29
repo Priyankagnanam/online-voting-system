@@ -32,11 +32,10 @@ const electionSchema = new mongoose.Schema({
   },
 });
 
-electionSchema.pre("save", function (next) {
+electionSchema.pre("save", function () {
   if (this.startDate > this.endDate) {
-    return next(new Error("End date must be after start date"));
+    throw new Error("End date must be after start date");
   }
-  next();
 });
 
 electionSchema.methods.updateStatus = function () {

@@ -1,6 +1,32 @@
+# Dependencies
 node_modules/
+
+# Environment files (may contain secrets)
 .env
+.env.*
+!.env.example
+
+# Build output
 dist/
 build/
-.DS_Store
+
+# Logs
 *.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test coverage
+coverage/
+
+# Misc
+*.pid
+*.seed

@@ -3,6 +3,7 @@ const Election = require("../models/Election");
 const Candidate = require("../models/Candidate");
 const Vote = require("../models/Vote");
 const { getSuspiciousAlerts, getSecurityStats } = require("../services/riskDetection");
+const logger = require('../utils/logger');
 
 const getDashboardStats = async (req, res) => {
   try {
@@ -22,20 +23,31 @@ const getDashboardStats = async (req, res) => {
       security,
     });
   } catch (error) {
-    console.error("Get admin stats error:", error.message);
+    logger.error("Get admin stats error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });
   }
 };
 
 const getUsers = async (req, res) => {
   try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
+
     const users = await User.find()
       .select("-passwordHash")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
-    res.json({ users });
+    const total = await User.countDocuments();
+
+    res.json({
+      users,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
   } catch (error) {
-    console.error("Get users error:", error.message);
+    logger.error("Get users error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -55,7 +67,7 @@ const toggleUserVerification = async (req, res) => {
       user: user.toJSON(),
     });
   } catch (error) {
-    console.error("Toggle verification error:", error.message);
+    logger.error("Toggle verification error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -74,9 +86,10 @@ const deleteUser = async (req, res) => {
     await Vote.deleteMany({ voterId: user._id });
     await user.deleteOne();
 
+    logger.info("User deleted", { userId: user._id, requestId: req.id });
     res.json({ message: "User deleted" });
   } catch (error) {
-    console.error("Delete user error:", error.message);
+    logger.error("Delete user error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -90,7 +103,7 @@ const getSecurityAlerts = async (req, res) => {
 
     res.json(data);
   } catch (error) {
-    console.error("Get security alerts error:", error.message);
+    logger.error("Get security alerts error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -131,7 +144,7 @@ const getAllResults = async (req, res) => {
 
     res.json({ results });
   } catch (error) {
-    console.error("Get all results error:", error.message);
+    logger.error("Get all results error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });
   }
 };
