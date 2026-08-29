@@ -154,21 +154,29 @@ cd backend
 cp .env.example .env
 ```
 
-Edit `.env` with your settings:
+Edit `.env` with your production settings:
 
 ```
+NODE_ENV=production
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/online-voting-system
+MONGODB_URI=mongodb+srv://<your_username>:<your_password>@<cluster>.mongodb.net/<dbname>?retryWrites=true&w=majority
 JWT_SECRET=your_random_secret_string_here
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_app_password
+
+ADMIN_EMAIL=your_admin_email@gmail.com
+ADMIN_PASSWORD=your_secure_password
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=your_email@gmail.com
+SMTP_PASSWORD=your_16_char_app_password
+
+FRONTEND_URL=https://your-frontend-domain.com
+CORS_ORIGIN=https://your-frontend-domain.com
 ```
 
-For Gmail: Enable 2FA and create an [App Password](https://myaccount.google.com/apppasswords).
-
-For MongoDB Atlas: Create a free cluster and paste the connection string as `MONGODB_URI`.
+**For Gmail OTP:** Enable Google 2FA and create an [App Password](https://myaccount.google.com/apppasswords). Use this 16-character password in `SMTP_PASSWORD`.
+**For MongoDB Atlas:** Create a free cluster, whitelist `0.0.0.0/0` in Network Access, create a database user, and paste the connection string into `MONGODB_URI`.
 
 ### 3. Seed the admin user
 
@@ -177,9 +185,7 @@ cd backend
 npm run seed
 ```
 
-This creates:
-- **Email:** admin@voting.com
-- **Password:** admin123
+This securely creates or updates the admin user in the database using the `ADMIN_EMAIL` and `ADMIN_PASSWORD` from your `.env` file.
 
 ### 4. Start the application
 
