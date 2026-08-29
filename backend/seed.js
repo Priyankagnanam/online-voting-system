@@ -29,6 +29,7 @@ const seedAdmin = async () => {
       if (existingAdmin.role !== 'admin') {
         existingAdmin.role = 'admin';
       }
+      existingAdmin.isVerified = true;
       existingAdmin.passwordHash = password; // Will be hashed by pre-save hook
       await existingAdmin.save();
       logger.info(`Admin already exists. Password updated for: ${email}`);
