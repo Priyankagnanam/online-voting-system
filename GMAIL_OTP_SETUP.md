@@ -21,7 +21,17 @@ To send real OTP emails, you cannot use your standard Gmail password. You must g
 4. Click **Connect** on your cluster, choose "Connect your application", and copy the connection string.
 5. Replace `<password>` in the connection string with the database user's password.
 
-## 3. Environment Configuration
+## 3. Password Cheat Sheet
+
+To avoid confusion when setting up your `.env` file, here is exactly what passwords go where:
+
+| Purpose | What to use |
+|---|---|
+| **Gmail login** | Your Gmail's own regular password (never used in `.env`) |
+| **Project Admin login (`ADMIN_PASSWORD`)** | A separate strong password just for logging into the voting app |
+| **Gmail SMTP (`SMTP_PASSWORD`)** | The 16-character Google App Password |
+
+## 4. Environment Configuration
 
 In the `backend/` directory, create your `.env` file based on `.env.example`:
 
