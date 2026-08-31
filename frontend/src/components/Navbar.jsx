@@ -47,6 +47,7 @@ const Navbar = () => {
             <Link to="/admin/elections" onClick={closeMenu}>Elections</Link>
             <Link to="/admin/candidates" onClick={closeMenu}>Candidates</Link>
             <Link to="/admin/voters" onClick={closeMenu}>Voters</Link>
+            <Link to="/admin/approved-voters" onClick={closeMenu}>Approved List</Link>
             <Link to="/admin/results" onClick={closeMenu}>Results</Link>
             <Link to="/admin/security-alerts" onClick={closeMenu}>Alerts</Link>
             <button onClick={handleLogout}>Logout</button>

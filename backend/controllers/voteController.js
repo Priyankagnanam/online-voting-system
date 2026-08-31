@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const Vote = require('../models/Vote');
 const Election = require('../models/Election');
 const Candidate = require('../models/Candidate');
@@ -33,31 +34,46 @@ const castVote = async (req, res) => {
       return res.status(400).json({ error: 'Invalid candidate for this election' });
     }
 
-    // 4. Check if already voted (application-level check)
-    const existingVote = await Vote.findOne({ voterId, electionId });
+    // 4. Generate deterministic voterIdHash to prevent double voting anonymously
+    const voterIdHash = crypto
+      .createHash('sha256')
+      .update(voterId.toString() + electionId.toString() + (process.env.JWT_SECRET || 'secret-salt'))
+      .digest('hex');
+
+    // Check if already voted (application-level check)
+    const existingVote = await Vote.findOne({ voterIdHash, electionId });
     if (existingVote) {
       return res.status(400).json({ error: 'You have already voted in this election' });
     }
 
-    // 5. Cast vote atomically
-    const vote = await Vote.create({ voterId, electionId, candidateId });
+    // 5. Generate secure random receipt hash for vote audit/verifiability
+    const receiptHash = crypto.randomBytes(16).toString('hex');
 
-    // 6. Update user's voted elections list
+    // 6. Cast vote atomically
+    const vote = await Vote.create({ voterIdHash, electionId, candidateId, receiptHash });
+
+    // 7. Update user's voted elections list
     await User.findByIdAndUpdate(voterId, {
       $addToSet: { votedElections: electionId },
     });
 
     logger.info('Vote cast', {
-      voterId: voterId.toString(),
       electionId: electionId.toString(),
       requestId: req.id,
     });
+
+    // Emit live WebSocket update
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('voteCast', { electionId: electionId.toString() });
+    }
 
     res.status(201).json({
       message: 'Vote cast successfully',
       vote: {
         electionId: vote.electionId,
         candidateId: vote.candidateId,
+        receiptHash: vote.receiptHash,
         createdAt: vote.createdAt,
       },
     });

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { io } from "socket.io-client";
 import api from "../../services/api";
 import Loading from "../../components/Loading";
 import ErrorMessage from "../../components/ErrorMessage";
@@ -10,6 +11,19 @@ const Results = () => {
 
   useEffect(() => {
     fetchResults();
+
+    const socketUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    const socket = io(socketUrl, {
+      withCredentials: true,
+    });
+
+    socket.on("voteCast", () => {
+      fetchResults();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   const fetchResults = async () => {

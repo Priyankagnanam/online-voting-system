@@ -52,6 +52,10 @@ const AdminDashboard = () => {
           <h3>{stats.activeElections}</h3>
           <p>Active Elections</p>
         </div>
+        <div className="stat-card">
+          <h3>{stats.totalApprovedVoters || 0}</h3>
+          <p>Approved Voters</p>
+        </div>
       </div>
 
       <h3>Quick Actions</h3>
@@ -67,6 +71,10 @@ const AdminDashboard = () => {
         <Link to="/admin/voters" className="stat-card" style={{ textDecoration: "none" }}>
           <h3>Voters</h3>
           <p>Manage voters</p>
+        </Link>
+        <Link to="/admin/approved-voters" className="stat-card" style={{ textDecoration: "none" }}>
+          <h3>Pre-Approval</h3>
+          <p>Manage approved list</p>
         </Link>
         <Link to="/admin/results" className="stat-card" style={{ textDecoration: "none" }}>
           <h3>Results</h3>

@@ -1,5 +1,6 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 const app = require('../server');
 const User = require('../models/User');
 const Election = require('../models/Election');
@@ -52,7 +53,11 @@ describe('Voting Logic and Concurrency', () => {
       
     expect(res.status).toBe(201);
     
-    const voteCount = await Vote.countDocuments({ electionId, voterId });
+    const voterIdHash = crypto
+      .createHash('sha256')
+      .update(voterId.toString() + electionId.toString() + (process.env.JWT_SECRET || 'secret-salt'))
+      .digest('hex');
+    const voteCount = await Vote.countDocuments({ electionId, voterIdHash });
     expect(voteCount).toBe(1);
   });
 
@@ -73,7 +78,11 @@ describe('Voting Logic and Concurrency', () => {
     expect(successCount).toBe(1);
     expect(failCount).toBe(9);
 
-    const voteCount = await Vote.countDocuments({ electionId, voterId });
+    const voterIdHash = crypto
+      .createHash('sha256')
+      .update(voterId.toString() + electionId.toString() + (process.env.JWT_SECRET || 'secret-salt'))
+      .digest('hex');
+    const voteCount = await Vote.countDocuments({ electionId, voterIdHash });
     expect(voteCount).toBe(1);
   });
 });

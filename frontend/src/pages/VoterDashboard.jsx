@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { io } from "socket.io-client";
 import api from "../services/api";
 import Loading from "../components/Loading";
 import ErrorMessage from "../components/ErrorMessage";
@@ -12,6 +13,27 @@ const VoterDashboard = () => {
 
   useEffect(() => {
     fetchData();
+
+    const socketUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    const socket = io(socketUrl, {
+      withCredentials: true,
+    });
+
+    socket.on("voteCast", () => {
+      fetchData();
+    });
+
+    socket.on("electionStarted", () => {
+      fetchData();
+    });
+
+    socket.on("electionEnded", () => {
+      fetchData();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   const fetchData = async () => {

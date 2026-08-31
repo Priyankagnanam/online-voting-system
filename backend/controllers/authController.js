@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const OTP = require("../models/OTP");
+const ApprovedVoter = require("../models/ApprovedVoter");
 const generateOTP = require("../utils/generateOTP");
 const { sendOTP } = require("../services/email");
 const { recordLoginAttempt } = require("../services/riskDetection");
@@ -8,6 +9,17 @@ const logger = require("../utils/logger");
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
+
+    // Check if voter pre-approval is required (if list is not empty)
+    const approvedCount = await ApprovedVoter.countDocuments();
+    if (approvedCount > 0) {
+      const isApproved = await ApprovedVoter.findOne({ email: email.toLowerCase().trim() });
+      if (!isApproved) {
+        return res.status(400).json({
+          error: "Your email is not on the pre-approved voter list. Please contact the administrator.",
+        });
+      }
+    }
 
     const existing = await User.findOne({ email });
     if (existing) {

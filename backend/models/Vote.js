@@ -1,10 +1,9 @@
 const mongoose = require("mongoose");
 
 const voteSchema = new mongoose.Schema({
-  voterId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: [true, "Voter ID is required"],
+  voterIdHash: {
+    type: String,
+    required: [true, "Voter ID hash is required"],
   },
   electionId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -16,12 +15,17 @@ const voteSchema = new mongoose.Schema({
     ref: "Candidate",
     required: [true, "Candidate ID is required"],
   },
+  receiptHash: {
+    type: String,
+    required: true,
+    unique: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
   },
 });
 
-voteSchema.index({ voterId: 1, electionId: 1 }, { unique: true });
+voteSchema.index({ voterIdHash: 1, electionId: 1 }, { unique: true });
 
 module.exports = mongoose.model("Vote", voteSchema);

@@ -23,6 +23,7 @@ import CandidateManagement from "./pages/admin/CandidateManagement";
 import VoterManagement from "./pages/admin/VoterManagement";
 import Results from "./pages/admin/Results";
 import SecurityAlerts from "./pages/admin/SecurityAlerts";
+import ApprovedVoters from "./pages/admin/ApprovedVoters";
 
 import "./App.css";
 
@@ -71,6 +72,9 @@ function App() {
                 } />
                 <Route path="/admin/security-alerts" element={
                   <AdminRoute><SecurityAlerts /></AdminRoute>
+                } />
+                <Route path="/admin/approved-voters" element={
+                  <AdminRoute><ApprovedVoters /></AdminRoute>
                 } />
 
                 <Route path="*" element={<NotFound />} />

@@ -104,6 +104,57 @@ if (process.env.NODE_ENV !== 'test') {
       logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
     });
 
+    // Initialize Socket.io
+    const socketIo = require('socket.io');
+    const io = socketIo(server, {
+      cors: {
+        origin: allowedOrigins,
+        credentials: true
+      }
+    });
+
+    app.set('io', io);
+
+    io.on('connection', (socket) => {
+      logger.info(`New WebSocket client connected: ${socket.id}`);
+      socket.on('disconnect', () => {
+        logger.info(`WebSocket client disconnected: ${socket.id}`);
+      });
+    });
+
+    // Start background timer to automatically transition election statuses and notify clients
+    const Election = require('./models/Election');
+    setInterval(async () => {
+      try {
+        const now = new Date();
+        // 1. upcoming -> active
+        const upcomingToActive = await Election.find({
+          status: 'upcoming',
+          startDate: { $lte: now }
+        });
+        for (const election of upcomingToActive) {
+          election.status = 'active';
+          await election.save();
+          logger.info(`Election automatically started: ${election.title}`);
+          io.emit('electionStarted', { electionId: election._id.toString() });
+        }
+
+        // 2. active -> ended
+        const activeToEnded = await Election.find({
+          status: 'active',
+          endDate: { $lt: now }
+        });
+        for (const election of activeToEnded) {
+          election.status = 'ended';
+          await election.save();
+          logger.info(`Election automatically ended: ${election.title}`);
+          io.emit('electionEnded', { electionId: election._id.toString() });
+        }
+      } catch (err) {
+        logger.error('Error in background election status timer:', { error: err.message });
+      }
+    }, 15000); // Check every 15 seconds
+
     // Graceful shutdown
     const shutdown = async (signal) => {
       logger.info(`${signal} received. Starting graceful shutdown...`);
