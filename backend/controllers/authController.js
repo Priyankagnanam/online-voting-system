@@ -112,6 +112,13 @@ const login = async (req, res) => {
     const userAgent = req.get("User-Agent") || "unknown";
 
     const user = await User.findOne({ email: cleanEmail });
+    logger.info("Login attempt details", {
+      attemptedEmail: cleanEmail,
+      userFound: !!user,
+      userRole: user ? user.role : null,
+      isVerified: user ? user.isVerified : null,
+    });
+
     if (!user) {
       await recordLoginAttempt(cleanEmail, false, ip, userAgent);
       return res.status(401).json({ error: "Invalid email or password" });
@@ -122,8 +129,9 @@ const login = async (req, res) => {
     }
 
     const isMatch = await user.comparePassword(password);
+    logger.info("Password check", { attemptedEmail: cleanEmail, isMatch });
     if (!isMatch) {
-      await recordLoginAttempt(email, false, ip, userAgent);
+      await recordLoginAttempt(cleanEmail, false, ip, userAgent);
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
