@@ -124,28 +124,27 @@ if (process.env.NODE_ENV !== 'test') {
     if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
       try {
         const User = require('./models/User');
-        const adminEmail = process.env.ADMIN_EMAIL.toLowerCase().trim();
-        const adminPassword = process.env.ADMIN_PASSWORD;
-        const existingAdmin = await User.findOne({ email: adminEmail });
-        if (existingAdmin) {
-          existingAdmin.role = 'admin';
-          existingAdmin.isVerified = true;
-          const isMatch = await existingAdmin.comparePassword(adminPassword);
-          if (!isMatch) {
-            existingAdmin.passwordHash = adminPassword;
-          }
-          await existingAdmin.save();
-          logger.info(`Admin user initialized/updated: ${adminEmail}`);
-        } else {
-          await User.create({
-            name: 'Administrator',
-            email: adminEmail,
-            passwordHash: adminPassword,
-            role: 'admin',
-            isVerified: true,
-          });
-          logger.info(`Admin user created: ${adminEmail}`);
-        }
+        const bcrypt = require('bcryptjs');
+        const adminEmail = process.env.ADMIN_EMAIL.replace(/^["']|["']$/g, '').toLowerCase().trim();
+        const adminPassword = process.env.ADMIN_PASSWORD.replace(/^["']|["']$/g, '').trim();
+        
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(adminPassword, salt);
+
+        await User.updateOne(
+          { email: adminEmail },
+          {
+            $set: {
+              name: 'Administrator',
+              email: adminEmail,
+              passwordHash: passwordHash,
+              role: 'admin',
+              isVerified: true,
+            }
+          },
+          { upsert: true }
+        );
+        logger.info(`Admin user guaranteed seeded: ${adminEmail}`);
       } catch (err) {
         logger.error('Error auto-seeding admin user:', { error: err.message });
       }
