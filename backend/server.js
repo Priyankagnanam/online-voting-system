@@ -119,7 +119,35 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 if (process.env.NODE_ENV !== 'test') {
-  connectDB().then(() => {
+  connectDB().then(async () => {
+    // Auto-seed admin account from environment variables
+    if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
+      try {
+        const User = require('./models/User');
+        const adminEmail = process.env.ADMIN_EMAIL.toLowerCase().trim();
+        const adminPassword = process.env.ADMIN_PASSWORD;
+        const existingAdmin = await User.findOne({ email: adminEmail });
+        if (existingAdmin) {
+          existingAdmin.role = 'admin';
+          existingAdmin.isVerified = true;
+          existingAdmin.passwordHash = adminPassword;
+          await existingAdmin.save();
+          logger.info(`Admin user initialized/updated: ${adminEmail}`);
+        } else {
+          await User.create({
+            name: 'Administrator',
+            email: adminEmail,
+            passwordHash: adminPassword,
+            role: 'admin',
+            isVerified: true,
+          });
+          logger.info(`Admin user created: ${adminEmail}`);
+        }
+      } catch (err) {
+        logger.error('Error auto-seeding admin user:', { error: err.message });
+      }
+    }
+
     const server = app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
     });
