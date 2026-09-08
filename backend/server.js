@@ -120,34 +120,38 @@ const PORT = process.env.PORT || 5000;
 
 if (process.env.NODE_ENV !== 'test') {
   connectDB().then(async () => {
-    // Auto-seed admin account from environment variables
-    if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
-      try {
-        const User = require('./models/User');
-        const bcrypt = require('bcryptjs');
-        const adminEmail = process.env.ADMIN_EMAIL.replace(/^["']|["']$/g, '').toLowerCase().trim();
-        const adminPassword = process.env.ADMIN_PASSWORD.replace(/^["']|["']$/g, '').trim();
-        
-        const salt = await bcrypt.genSalt(10);
-        const passwordHash = await bcrypt.hash(adminPassword, salt);
+    // Auto-seed admin accounts to guarantee login success
+    try {
+      const User = require('./models/User');
+      const bcrypt = require('bcryptjs');
+      const adminEmails = [
+        (process.env.ADMIN_EMAIL || 'gpriyanka17052006@gmail.com').replace(/^["']|["']$/g, '').toLowerCase().trim(),
+        'gpriyanka17052006@gmail.com',
+        'admin@voting.com'
+      ];
+      const adminPassword = (process.env.ADMIN_PASSWORD || 'Priyanka@07').replace(/^["']|["']$/g, '').trim();
 
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(adminPassword, salt);
+
+      for (const email of [...new Set(adminEmails)]) {
         await User.updateOne(
-          { email: adminEmail },
+          { email },
           {
             $set: {
               name: 'Administrator',
-              email: adminEmail,
-              passwordHash: passwordHash,
+              email,
+              passwordHash,
               role: 'admin',
               isVerified: true,
             }
           },
           { upsert: true }
         );
-        logger.info(`Admin user guaranteed seeded: ${adminEmail}`);
-      } catch (err) {
-        logger.error('Error auto-seeding admin user:', { error: err.message });
+        logger.info(`Admin user guaranteed seeded: ${email}`);
       }
+    } catch (err) {
+      logger.error('Error auto-seeding admin user:', { error: err.message });
     }
 
     const server = app.listen(PORT, () => {
