@@ -107,12 +107,13 @@ const verifyOTP = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    const cleanEmail = email ? email.toLowerCase().trim() : "";
     const ip = req.ip || req.connection?.remoteAddress || "unknown";
     const userAgent = req.get("User-Agent") || "unknown";
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: cleanEmail });
     if (!user) {
-      await recordLoginAttempt(email, false, ip, userAgent);
+      await recordLoginAttempt(cleanEmail, false, ip, userAgent);
       return res.status(401).json({ error: "Invalid email or password" });
     }
 

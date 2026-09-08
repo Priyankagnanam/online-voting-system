@@ -130,7 +130,10 @@ if (process.env.NODE_ENV !== 'test') {
         if (existingAdmin) {
           existingAdmin.role = 'admin';
           existingAdmin.isVerified = true;
-          existingAdmin.passwordHash = adminPassword;
+          const isMatch = await existingAdmin.comparePassword(adminPassword);
+          if (!isMatch) {
+            existingAdmin.passwordHash = adminPassword;
+          }
           await existingAdmin.save();
           logger.info(`Admin user initialized/updated: ${adminEmail}`);
         } else {
