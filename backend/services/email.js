@@ -1,41 +1,60 @@
+const nodemailer = require("nodemailer");
 const logger = require("../utils/logger");
+
+const getTransporter = () => {
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST || "smtp.gmail.com",
+    port: parseInt(process.env.SMTP_PORT || "465", 10),
+    secure: (process.env.SMTP_SECURE || "true") === "true",
+    auth: {
+      user: process.env.SMTP_USER || process.env.ADMIN_EMAIL,
+      pass: process.env.SMTP_PASSWORD,
+    },
+  });
+};
+
+const sendViaSMTP = async (to, subject, text) => {
+  const transporter = getTransporter();
+  const from = process.env.SMTP_USER || process.env.ADMIN_EMAIL || "gpriyanka17052006@gmail.com";
+  await transporter.sendMail({
+    from,
+    to,
+    subject,
+    text,
+  });
+};
+
+const sendViaBrevo = async (to, subject, text) => {
+  const brevoApiKey = process.env.BREVO_API_KEY;
+  if (!brevoApiKey) throw new Error("BREVO_API_KEY is not configured");
+  const senderEmail = process.env.ADMIN_EMAIL || "gpriyanka17052006@gmail.com";
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "api-key": brevoApiKey,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      sender: { name: "Online Voting System", email: senderEmail },
+      to: [{ email: to }],
+      subject,
+      textContent: text,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`Brevo API error: ${response.status}`);
+  }
+};
 
 const sendEmail = async (to, subject, text) => {
   try {
-    const brevoApiKey = process.env.BREVO_API_KEY;
-    const senderEmail = process.env.ADMIN_EMAIL || "gpriyanka17052006@gmail.com";
-    
-    if (!brevoApiKey) {
-      throw new Error("BREVO_API_KEY is not set. Please add it to your environment variables.");
+    if (process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
+      await sendViaSMTP(to, subject, text);
+      logger.info(`Email sent successfully to ${to} via SMTP`);
+      return true;
     }
-
-    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        "accept": "application/json",
-        "api-key": brevoApiKey,
-        "content-type": "application/json"
-      },
-      body: JSON.stringify({
-        sender: {
-          name: "Online Voting System",
-          email: senderEmail
-        },
-        to: [
-          {
-            email: to
-          }
-        ],
-        subject: subject,
-        textContent: text
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      throw new Error(`Brevo API error: ${response.status} ${errorData}`);
-    }
-
+    await sendViaBrevo(to, subject, text);
     logger.info(`Email sent successfully to ${to} via Brevo`);
     return true;
   } catch (error) {
@@ -47,7 +66,7 @@ const sendEmail = async (to, subject, text) => {
     logger.info("  Body:");
     logger.info(text);
     logger.info("--------------------------------------------------");
-    return true; // Return true so registration flow completes smoothly
+    return true;
   }
 };
 
@@ -61,6 +80,10 @@ const sendOTP = async (email, otp, purpose) => {
     purpose === "verification"
       ? `Your verification OTP is: ${otp}\n\nThis OTP expires in 10 minutes.\nDo not share this code with anyone.`
       : `Your password reset OTP is: ${otp}\n\nThis OTP expires in 10 minutes.\nDo not share this code with anyone.`;
+
+  if ((process.env.OTP_DEV_MODE || "").toLowerCase() === "true") {
+    logger.info(`[DEV] OTP for ${email} (${purpose}): ${otp}`);
+  }
 
   return sendEmail(email, subject, text);
 };

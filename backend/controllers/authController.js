@@ -160,6 +160,37 @@ const login = async (req, res) => {
   }
 };
 
+const resendOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const cleanEmail = email ? email.toLowerCase().trim() : "";
+
+    const user = await User.findOne({ email: cleanEmail });
+    if (!user) {
+      return res.status(404).json({ error: "No account found with this email" });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ error: "Email is already verified. You can log in." });
+    }
+
+    const otp = generateOTP();
+    await OTP.create({
+      email: cleanEmail,
+      otpHash: otp,
+      purpose: "verification",
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    });
+
+    await sendOTP(cleanEmail, otp, "verification");
+
+    res.json({ message: "A new OTP has been sent to your email." });
+  } catch (error) {
+    logger.error("Resend OTP error", { error: error.message, requestId: req.id });
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -228,4 +259,4 @@ const getMe = async (req, res) => {
   }
 };
 
-module.exports = { register, verifyOTP, login, forgotPassword, resetPassword, getMe };
+module.exports = { register, verifyOTP, login, resendOTP, forgotPassword, resetPassword, getMe };

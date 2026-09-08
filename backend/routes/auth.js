@@ -7,6 +7,7 @@ const {
   register,
   verifyOTP,
   login,
+  resendOTP,
   forgotPassword,
   resetPassword,
   getMe,
@@ -50,6 +51,14 @@ router.post(
   ],
   validate,
   login
+);
+
+router.post(
+  "/resend-otp",
+  otpLimiter,
+  [body("email").isEmail().withMessage("Please enter a valid email")],
+  validate,
+  resendOTP
 );
 
 router.post(

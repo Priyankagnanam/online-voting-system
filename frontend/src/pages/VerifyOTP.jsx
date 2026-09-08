@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import api from "../services/api";
 import ErrorMessage from "../components/ErrorMessage";
 
@@ -9,6 +9,7 @@ const VerifyOTP = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -32,6 +33,23 @@ const VerifyOTP = () => {
       setError(err.response?.data?.error || "Verification failed");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!email) {
+      setError("Enter your email first.");
+      return;
+    }
+    setError("");
+    setResending(true);
+    try {
+      const { data } = await api.post("/auth/resend-otp", { email });
+      setSuccess(data.message);
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to resend OTP");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -65,7 +83,19 @@ const VerifyOTP = () => {
         <button className="btn btn-primary" style={{ width: "100%" }} disabled={loading}>
           {loading ? "Verifying..." : "Verify"}
         </button>
+        <button
+          type="button"
+          className="btn"
+          style={{ width: "100%", marginTop: "0.5rem" }}
+          onClick={handleResend}
+          disabled={resending}
+        >
+          {resending ? "Sending..." : "Resend OTP"}
+        </button>
       </form>
+      <p style={{ marginTop: "1rem", textAlign: "center" }}>
+        Already verified? <Link to="/login">Login</Link>
+      </p>
     </div>
   );
 };

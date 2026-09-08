@@ -1,9 +1,9 @@
 import axios from "axios";
 
-const rawBase = import.meta.env.VITE_API_URL || 'https://voting-backend-zn31.onrender.com';
+const rawBase = import.meta.env.VITE_API_URL || '';
 const cleanBase = rawBase
-  ? (rawBase.startsWith('http://') || rawBase.startsWith('https://') ? rawBase : `https://${rawBase}`).replace(/\/+$/, '')
-  : 'https://voting-backend-zn31.onrender.com';
+  ? (rawBase.startsWith('http://') || rawBase.startsWith('https://') ? rawBase : `http://${rawBase}`).replace(/\/+$/, '')
+  : '';
 
 const api = axios.create({
   baseURL: cleanBase ? `${cleanBase}/api` : '/api',
