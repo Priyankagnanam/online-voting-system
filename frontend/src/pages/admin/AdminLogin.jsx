@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../services/api";
 import ErrorMessage from "../../components/ErrorMessage";
+import AuthLayout from "../../components/AuthLayout";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
@@ -33,8 +34,15 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="auth-page">
-      <h2>Admin Login</h2>
+    <AuthLayout
+      title="Admin Login"
+      subtitle="Sign in with administrator credentials to manage elections."
+      bullets={[
+        "Create and manage elections and candidates",
+        "Track voter registration and turn-out",
+        "Monitor security alerts in real time",
+      ]}
+    >
       <ErrorMessage message={error} />
       <form onSubmit={handleSubmit}>
         <div className="form-group">
@@ -55,14 +63,14 @@ const AdminLogin = () => {
             required
           />
         </div>
-        <button className="btn btn-primary" style={{ width: "100%" }} disabled={loading}>
+        <button className="btn btn-primary btn-block" disabled={loading}>
           {loading ? "Logging in..." : "Admin Login"}
         </button>
       </form>
-      <p style={{ marginTop: "1rem", textAlign: "center" }}>
+      <p className="auth-footer">
         <Link to="/login">Voter Login</Link>
       </p>
-    </div>
+    </AuthLayout>
   );
 };
 

@@ -137,9 +137,9 @@ const ApprovedVoters = () => {
 
   return (
     <div className="page">
-      <h2>Pre-Registered Student Eligibility List</h2>
+      <h2>Voter Eligibility List</h2>
       <p style={{ color: "var(--text-secondary)", marginBottom: "1.5rem" }}>
-        Only pre-registered students with an active Roll Number / Register Number on this list are eligible to register and cast a vote.
+        Only pre-approved voters with an active Voter ID Number on this list are eligible to register and cast a vote.
       </p>
 
       {error && <ErrorMessage message={error} />}
@@ -149,21 +149,21 @@ const ApprovedVoters = () => {
         {/* Left Column: Add Voters */}
         <div>
           <div className="card" style={{ marginBottom: "1.5rem" }}>
-            <h3>Add Single Eligible Student</h3>
+            <h3>Add Single Eligible Voter</h3>
             <form onSubmit={handleSingleAdd} style={{ marginTop: "1rem" }}>
               <div className="form-group">
-                <label>Roll Number / Register Number *</label>
+                <label>Voter ID Number *</label>
                 <input
                   type="text"
                   value={rollNumberInput}
                   onChange={(e) => setRollNumberInput(e.target.value)}
-                  placeholder="21CS001"
+                  placeholder="VOT-2024-001"
                   required
                 />
               </div>
 
               <div className="form-group">
-                <label>Student Name</label>
+                <label>Full Name</label>
                 <input
                   type="text"
                   value={nameInput}
@@ -178,7 +178,7 @@ const ApprovedVoters = () => {
                   type="email"
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
-                  placeholder="alice@college.edu"
+                  placeholder="alice@example.com"
                 />
               </div>
 
@@ -188,7 +188,7 @@ const ApprovedVoters = () => {
                 style={{ width: "100%", marginTop: "0.5rem" }}
                 disabled={processing}
               >
-                {processing ? "Saving..." : "Add Eligible Student"}
+                {processing ? "Saving..." : "Add Eligible Voter"}
               </button>
             </form>
           </div>
@@ -196,7 +196,7 @@ const ApprovedVoters = () => {
           <div className="card">
             <h3>Bulk Add / CSV Import</h3>
             <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.75rem" }}>
-              Format per line: <code>RollNumber, StudentName, RegisteredEmail</code>
+              Format per line: <code>VoterID, FullName, RegisteredEmail</code>
             </p>
             <form onSubmit={handleBulkAdd}>
               <div className="form-group">
@@ -204,7 +204,7 @@ const ApprovedVoters = () => {
                   rows="5"
                   value={bulkInput}
                   onChange={(e) => setBulkInput(e.target.value)}
-                  placeholder="21CS001, Alice Smith, alice@college.edu&#10;21CS002, Bob Jones, bob@college.edu"
+                  placeholder="VOT-2024-001, Alice Smith, alice@example.com&#10;VOT-2024-002, Bob Jones, bob@example.com"
                   style={{ width: "100%", padding: "0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--text-primary)" }}
                 />
               </div>
@@ -238,7 +238,7 @@ const ApprovedVoters = () => {
               <h3>Eligible Voters ({total})</h3>
               <input
                 type="text"
-                placeholder="Search Roll No / Name / Email..."
+                placeholder="Search Voter ID / Name / Email..."
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -259,7 +259,7 @@ const ApprovedVoters = () => {
                 <table className="table" style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ borderBottom: "2px solid var(--border)" }}>
-                      <th style={{ textAlign: "left", padding: "0.5rem" }}>Roll / Reg No</th>
+                      <th style={{ textAlign: "left", padding: "0.5rem" }}>Voter ID</th>
                       <th style={{ textAlign: "left", padding: "0.5rem" }}>Name / Email</th>
                       <th style={{ textAlign: "center", padding: "0.5rem" }}>Status</th>
                       <th style={{ textAlign: "right", padding: "0.5rem" }}>Actions</th>

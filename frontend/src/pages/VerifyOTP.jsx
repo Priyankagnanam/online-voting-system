@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import api from "../services/api";
 import ErrorMessage from "../components/ErrorMessage";
+import AuthLayout from "../components/AuthLayout";
 
 const VerifyOTP = () => {
   const [email, setEmail] = useState("");
@@ -54,9 +55,10 @@ const VerifyOTP = () => {
   };
 
   return (
-    <div className="auth-page">
-      <h2>Verify OTP</h2>
-      <p>Enter the 6-digit code sent to your email.</p>
+    <AuthLayout
+      title="Verify Your Email"
+      subtitle="Enter the 6-digit code we sent to your email to activate your account."
+    >
       <ErrorMessage message={error} />
       {success && <div className="success-message">{success}</div>}
       <form onSubmit={handleVerify}>
@@ -80,23 +82,23 @@ const VerifyOTP = () => {
             placeholder="123456"
           />
         </div>
-        <button className="btn btn-primary" style={{ width: "100%" }} disabled={loading}>
+        <button className="btn btn-primary btn-block" disabled={loading}>
           {loading ? "Verifying..." : "Verify"}
         </button>
         <button
           type="button"
-          className="btn"
-          style={{ width: "100%", marginTop: "0.5rem" }}
+          className="btn btn-secondary btn-block"
+          style={{ marginTop: "0.6rem" }}
           onClick={handleResend}
           disabled={resending}
         >
           {resending ? "Sending..." : "Resend OTP"}
         </button>
       </form>
-      <p style={{ marginTop: "1rem", textAlign: "center" }}>
+      <p className="auth-footer">
         Already verified? <Link to="/login">Login</Link>
       </p>
-    </div>
+    </AuthLayout>
   );
 };
 

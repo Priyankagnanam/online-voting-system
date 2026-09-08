@@ -47,11 +47,21 @@ const register = async (req, res) => {
       email: cleanEmail,
       rollNumber: cleanRoll || undefined,
       passwordHash: password,
-      isVerified: true,
+      isVerified: false,
     });
 
+    const otp = generateOTP();
+    await OTP.create({
+      email: cleanEmail,
+      otpHash: otp,
+      purpose: "verification",
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    });
+
+    await sendOTP(cleanEmail, otp, "verification");
+
     res.status(201).json({
-      message: "Registration successful. You can log in now.",
+      message: "Registration successful. Please verify your email with the OTP sent to your inbox.",
       userId: user._id,
     });
   } catch (error) {
@@ -123,8 +133,8 @@ const login = async (req, res) => {
     }
 
     if (!user.isVerified) {
-      user.isVerified = true;
-      await user.save();
+      await recordLoginAttempt(cleanEmail, false, ip, userAgent);
+      return res.status(403).json({ error: "Please verify your email first." });
     }
 
     const isMatch = await user.comparePassword(password);

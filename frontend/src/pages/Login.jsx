@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import ErrorMessage from "../components/ErrorMessage";
+import AuthLayout from "../components/AuthLayout";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -38,8 +39,10 @@ const Login = () => {
   };
 
   return (
-    <div className="auth-page">
-      <h2>Login</h2>
+    <AuthLayout
+      title="Welcome Back"
+      subtitle="Login to review elections and cast your vote securely."
+    >
       <ErrorMessage message={error} />
       <form onSubmit={handleSubmit}>
         <div className="form-group">
@@ -60,22 +63,22 @@ const Login = () => {
             required
           />
         </div>
-        <button className="btn btn-primary" style={{ width: "100%" }} disabled={loading}>
+        <button className="btn btn-primary btn-block" disabled={loading}>
           {loading ? "Logging in..." : "Login"}
         </button>
       </form>
-      <p style={{ marginTop: "0.5rem", textAlign: "center" }}>
+      <p className="auth-footer">
         <Link to="/forgot-password">Forgot Password?</Link>
       </p>
       {showVerify && (
-        <p style={{ marginTop: "0.5rem", textAlign: "center" }}>
+        <p className="auth-footer">
           <Link to="/verify-otp">Verify your email / Resend OTP</Link>
         </p>
       )}
-      <p style={{ marginTop: "0.5rem", textAlign: "center" }}>
+      <p className="auth-footer">
         Don't have an account? <Link to="/register">Register</Link>
       </p>
-    </div>
+    </AuthLayout>
   );
 };
 

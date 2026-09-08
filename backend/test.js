@@ -100,15 +100,14 @@ const runTests = async () => {
     assert(status === 400, `Expected 400, got ${status}`);
   });
 
-  // --- Login after registration ---
-  console.log("\nLogin (after registration):");
-  await test("POST /api/auth/login succeeds for registered voter", async () => {
-    const { status, body } = await request("POST", "/api/auth/login", {
+  // --- Login before verification ---
+  console.log("\nLogin (before OTP verification):");
+  await test("POST /api/auth/login rejects unverified user", async () => {
+    const { status } = await request("POST", "/api/auth/login", {
       email: testEmail,
       password: testPassword,
     });
-    assert(status === 200, `Expected 200, got ${status}`);
-    assert(body.token, "No token returned");
+    assert(status === 403, `Expected 403, got ${status}`);
   });
 
   // --- Admin login (needs seed) ---
@@ -122,9 +121,17 @@ const runTests = async () => {
   });
 
   await test("POST /api/auth/login with admin credentials", async () => {
+    require("dotenv").config();
+    const adminEmail = (process.env.ADMIN_EMAIL || "gpriyanka17052006@gmail.com")
+      .replace(/^["']|["']$/g, "")
+      .toLowerCase()
+      .trim();
+    const adminPassword = (process.env.ADMIN_PASSWORD || "Priyanka@07")
+      .replace(/^["']|["']$/g, "")
+      .trim();
     const { status, body } = await request("POST", "/api/auth/login", {
-      email: "admin@voting.com",
-      password: "admin123",
+      email: adminEmail,
+      password: adminPassword,
     });
     if (status === 200) {
       adminToken = body.token;
@@ -260,6 +267,7 @@ const runTests = async () => {
     });
 
     await test("DELETE /api/elections/:id removes election", async () => {
+      await request("PATCH", `/api/elections/${electionId}/status`, { status: "ended" }, adminToken);
       const { status } = await request("DELETE", `/api/elections/${electionId}`, null, adminToken);
       assert(status === 200, `Expected 200, got ${status}`);
     });

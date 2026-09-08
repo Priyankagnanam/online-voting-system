@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import api from "../services/api";
 import ErrorMessage from "../components/ErrorMessage";
+import AuthLayout from "../components/AuthLayout";
 
 const ResetPassword = () => {
   const [email, setEmail] = useState("");
@@ -37,9 +38,10 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="auth-page">
-      <h2>Reset Password</h2>
-      <p>Enter the OTP and your new password.</p>
+    <AuthLayout
+      title="Reset Password"
+      subtitle="Enter the OTP we sent you and choose a new password."
+    >
       <ErrorMessage message={error} />
       {success && <div className="success-message">{success}</div>}
       <form onSubmit={handleSubmit}>
@@ -73,14 +75,14 @@ const ResetPassword = () => {
             minLength={6}
           />
         </div>
-        <button className="btn btn-primary" style={{ width: "100%" }} disabled={loading}>
+        <button className="btn btn-primary btn-block" disabled={loading}>
           {loading ? "Resetting..." : "Reset Password"}
         </button>
       </form>
-      <p style={{ marginTop: "1rem", textAlign: "center" }}>
+      <p className="auth-footer">
         <Link to="/login">Back to Login</Link>
       </p>
-    </div>
+    </AuthLayout>
   );
 };
 

@@ -2,17 +2,16 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import ErrorMessage from "../components/ErrorMessage";
-import { useAuth } from "../context/AuthContext";
+import AuthLayout from "../components/AuthLayout";
 
 const Register = () => {
   const [name, setName] = useState("");
-  const [rollNumber, setRollNumber] = useState("");
+  const [regulationNumber, setRegulationNumber] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-  const { loginUser } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -22,9 +21,14 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await api.post("/auth/register", { name, rollNumber, email, password });
-      setSuccess("Registration successful! You can log in now.");
-      setTimeout(() => navigate("/login"), 1500);
+      await api.post("/auth/register", {
+        name,
+        rollNumber: regulationNumber,
+        email,
+        password,
+      });
+      setSuccess("Registration successful! We've sent a verification code to your email.");
+      setTimeout(() => navigate("/verify-otp", { state: { email } }), 1500);
     } catch (err) {
       setError(err.response?.data?.error || "Registration failed");
     } finally {
@@ -33,8 +37,10 @@ const Register = () => {
   };
 
   return (
-    <div className="auth-page">
-      <h2>Student Registration</h2>
+    <AuthLayout
+      title="Voter Registration"
+      subtitle="Create your voting account. You'll verify your email with a one-time code."
+    >
       <ErrorMessage message={error} />
       {success && <div className="success-message">{success}</div>}
       <form onSubmit={handleSubmit}>
@@ -50,13 +56,13 @@ const Register = () => {
           />
         </div>
         <div className="form-group">
-          <label>Roll Number / Register Number</label>
+          <label>Voter ID Number</label>
           <input
             type="text"
-            value={rollNumber}
-            onChange={(e) => setRollNumber(e.target.value.toUpperCase())}
+            value={regulationNumber}
+            onChange={(e) => setRegulationNumber(e.target.value.toUpperCase())}
             required
-            placeholder="21CS001"
+            placeholder="Enter your Voter ID / Registration number"
           />
         </div>
         <div className="form-group">
@@ -66,7 +72,7 @@ const Register = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            placeholder="student@college.edu"
+            placeholder="you@example.com"
           />
         </div>
         <div className="form-group">
@@ -79,14 +85,14 @@ const Register = () => {
             minLength={6}
           />
         </div>
-        <button className="btn btn-primary" style={{ width: "100%" }} disabled={loading}>
+        <button className="btn btn-primary btn-block" disabled={loading}>
           {loading ? "Registering..." : "Register"}
         </button>
       </form>
-      <p style={{ marginTop: "1rem", textAlign: "center" }}>
+      <p className="auth-footer">
         Already have an account? <Link to="/login">Login</Link>
       </p>
-    </div>
+    </AuthLayout>
   );
 };
 
