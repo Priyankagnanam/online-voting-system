@@ -1,8 +1,17 @@
 import axios from "axios";
 
-const rawBase = import.meta.env.VITE_API_URL || '';
+const BACKEND_URL = 'https://voting-backend-zn31.onrender.com';
+
+const envBase = import.meta.env.VITE_API_URL || '';
+const isLocalhost =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+const defaultBase = isLocalhost ? '' : BACKEND_URL;
+
+const rawBase = envBase || defaultBase;
 const cleanBase = rawBase
-  ? (rawBase.startsWith('http://') || rawBase.startsWith('https://') ? rawBase : `http://${rawBase}`).replace(/\/+$/, '')
+  ? (rawBase.startsWith('http://') || rawBase.startsWith('https://') ? rawBase : `https://${rawBase}`).replace(/\/+$/, '')
   : '';
 
 const api = axios.create({
