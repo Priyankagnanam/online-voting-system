@@ -31,28 +31,9 @@ const allowedOrigins = process.env.FRONTEND_URL
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, server-to-server)
+    // Allow any origin (echo origin back) to support all clients, browsers, and mobile devices
     if (!origin) return callback(null, true);
-
-    // In development, permit any localhost or 127.0.0.1 port
-    if (process.env.NODE_ENV !== 'production') {
-      if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
-        return callback(null, true);
-      }
-    }
-
-    const cleanOrigin = origin.replace(/\/+$/, '');
-    const isAllowed = allowedOrigins.some(allowed => {
-      const cleanAllowed = allowed.replace(/\/+$/, '');
-      return cleanOrigin === cleanAllowed || 
-             cleanOrigin === `https://${cleanAllowed}` || 
-             cleanOrigin === `http://${cleanAllowed}`;
-    }) || cleanOrigin.endsWith('.onrender.com');
-
-    if (isAllowed) {
-      return callback(null, true);
-    }
-    return callback(new Error('Not allowed by CORS'));
+    return callback(null, origin);
   },
   credentials: true,
 }));
