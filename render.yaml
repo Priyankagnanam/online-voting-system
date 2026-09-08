@@ -3,6 +3,7 @@ services:
   - type: web
     name: voting-backend
     env: node
+    plan: free
     rootDir: backend
     buildCommand: npm install
     startCommand: node server.js
