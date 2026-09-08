@@ -12,7 +12,7 @@ const Results = () => {
   useEffect(() => {
     fetchResults();
 
-    const rawSocketUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    const rawSocketUrl = import.meta.env.VITE_API_URL || "https://voting-backend-zn31.onrender.com";
     const socketUrl = (rawSocketUrl.startsWith('http://') || rawSocketUrl.startsWith('https://'))
       ? rawSocketUrl
       : `https://${rawSocketUrl}`;
