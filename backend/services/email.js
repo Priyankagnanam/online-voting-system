@@ -1,13 +1,16 @@
 const nodemailer = require("nodemailer");
 const logger = require("../utils/logger");
 
-const getTransporter = () => {
+const getTransporter = (port, secure) => {
   const smtpUser = (process.env.SMTP_USER || process.env.ADMIN_EMAIL || "").trim();
   const smtpPass = (process.env.SMTP_PASSWORD || "").trim();
   return nodemailer.createTransport({
     host: (process.env.SMTP_HOST || "smtp.gmail.com").trim(),
-    port: parseInt((process.env.SMTP_PORT || "465").trim(), 10),
-    secure: (process.env.SMTP_SECURE || "true").trim() === "true",
+    port,
+    secure,
+    connectionTimeout: 15000,
+    greetingTimeout: 10000,
+    socketTimeout: 20000,
     auth: {
       user: smtpUser,
       pass: smtpPass,
@@ -16,14 +19,27 @@ const getTransporter = () => {
 };
 
 const sendViaSMTP = async (to, subject, text) => {
-  const transporter = getTransporter();
   const from = (process.env.SMTP_USER || process.env.ADMIN_EMAIL || "gpriyanka17052006@gmail.com").trim();
-  await transporter.sendMail({
-    from,
-    to,
-    subject,
-    text,
-  });
+  const configuredPort = parseInt((process.env.SMTP_PORT || "465").trim(), 10) || 465;
+  const configuredSecure = (process.env.SMTP_SECURE || "true").trim() === "true";
+
+  const attempts = [[configuredPort, configuredSecure]];
+  if (!(configuredPort === 587 && !configuredSecure)) {
+    attempts.push([587, false]);
+  }
+
+  let lastErr;
+  for (const [port, secure] of attempts) {
+    try {
+      const transporter = getTransporter(port, secure);
+      await transporter.sendMail({ from, to, subject, text });
+      return;
+    } catch (err) {
+      lastErr = err;
+      logger.error(`SMTP attempt failed (port ${port}, secure ${secure}): ${err.message}`);
+    }
+  }
+  throw lastErr;
 };
 
 const sendViaBrevo = async (to, subject, text) => {
