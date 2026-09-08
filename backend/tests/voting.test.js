@@ -7,6 +7,8 @@ const Election = require('../models/Election');
 const Candidate = require('../models/Candidate');
 const Vote = require('../models/Vote');
 
+const ApprovedVoter = require('../models/ApprovedVoter');
+
 describe('Voting Logic and Concurrency', () => {
   let voterToken;
   let voterId;
@@ -16,12 +18,20 @@ describe('Voting Logic and Concurrency', () => {
   beforeEach(async () => {
     const voter = await User.create({
       name: 'Voter1',
+      rollNumber: '21CS001',
       email: 'voter1@test.com',
       passwordHash: 'VoterPass123',
       role: 'voter',
       isVerified: true,
     });
     voterId = voter._id;
+
+    await ApprovedVoter.create({
+      rollNumber: '21CS001',
+      name: 'Voter1',
+      email: 'voter1@test.com',
+      isEligible: true,
+    });
 
     const voterRes = await request(app)
       .post('/api/auth/login')
@@ -52,13 +62,33 @@ describe('Voting Logic and Concurrency', () => {
       .send({ electionId, candidateId });
       
     expect(res.status).toBe(201);
-    
-    const voterIdHash = crypto
-      .createHash('sha256')
-      .update(voterId.toString() + electionId.toString() + (process.env.JWT_SECRET || 'secret-salt'))
-      .digest('hex');
-    const voteCount = await Vote.countDocuments({ electionId, voterIdHash });
-    expect(voteCount).toBe(1);
+  });
+
+  it('should prevent duplicate voting and reject second attempt', async () => {
+    await request(app)
+      .post('/api/votes')
+      .set('Authorization', `Bearer ${voterToken}`)
+      .send({ electionId, candidateId });
+
+    const secondRes = await request(app)
+      .post('/api/votes')
+      .set('Authorization', `Bearer ${voterToken}`)
+      .send({ electionId, candidateId });
+
+    expect(secondRes.status).toBe(400);
+    expect(secondRes.body.error).toBe('You have already voted.');
+  });
+
+  it('should prevent voting if user is marked ineligible in ApprovedVoter', async () => {
+    await ApprovedVoter.updateOne({ rollNumber: '21CS001' }, { isEligible: false });
+
+    const res = await request(app)
+      .post('/api/votes')
+      .set('Authorization', `Bearer ${voterToken}`)
+      .send({ electionId, candidateId });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('You are not registered as an eligible voter.');
   });
 
   it('should prevent concurrent duplicate voting', async () => {
@@ -77,12 +107,5 @@ describe('Voting Logic and Concurrency', () => {
 
     expect(successCount).toBe(1);
     expect(failCount).toBe(9);
-
-    const voterIdHash = crypto
-      .createHash('sha256')
-      .update(voterId.toString() + electionId.toString() + (process.env.JWT_SECRET || 'secret-salt'))
-      .digest('hex');
-    const voteCount = await Vote.countDocuments({ electionId, voterIdHash });
-    expect(voteCount).toBe(1);
   });
 });

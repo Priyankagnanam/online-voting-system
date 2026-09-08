@@ -11,8 +11,11 @@ const ApprovedVoters = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  
-  const [inputEmails, setInputEmails] = useState("");
+
+  const [rollNumberInput, setRollNumberInput] = useState("");
+  const [nameInput, setNameInput] = useState("");
+  const [emailInput, setEmailInput] = useState("");
+  const [bulkInput, setBulkInput] = useState("");
   const [search, setSearch] = useState("");
   const [processing, setProcessing] = useState(false);
 
@@ -28,46 +31,78 @@ const ApprovedVoters = () => {
       setTotal(data.pagination.total);
       setTotalPages(data.pagination.totalPages);
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to load approved voters list");
+      setError(err.response?.data?.error || "Failed to load eligible voters list");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddVoters = async (e) => {
+  const handleSingleAdd = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
-    if (!inputEmails.trim()) return;
+    if (!rollNumberInput.trim()) return;
 
     setProcessing(true);
-    // Split by comma, newline or space
-    const emailList = inputEmails
-      .split(/[\n,; \t]+/)
-      .map(e => e.trim())
-      .filter(e => e.length > 0);
-
-    if (emailList.length === 0) {
-      setError("No valid emails found to add.");
-      setProcessing(false);
-      return;
-    }
-
     try {
-      const { data } = await api.post("/admin/approved-voters", { emails: emailList });
+      const { data } = await api.post("/admin/approved-voters", {
+        voters: [
+          {
+            rollNumber: rollNumberInput.trim().toUpperCase(),
+            name: nameInput.trim(),
+            email: emailInput.trim().toLowerCase(),
+            isEligible: true,
+          },
+        ],
+      });
       setSuccess(data.message);
-      setInputEmails("");
+      setRollNumberInput("");
+      setNameInput("");
+      setEmailInput("");
       setPage(1);
       fetchApprovedVoters();
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to add approved voters");
+      setError(err.response?.data?.error || "Failed to add voter");
     } finally {
       setProcessing(false);
     }
   };
 
+  const handleBulkAdd = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    if (!bulkInput.trim()) return;
+
+    setProcessing(true);
+    const lines = bulkInput.split("\n").filter((l) => l.trim().length > 0);
+    try {
+      const { data } = await api.post("/admin/approved-voters", { voters: lines });
+      setSuccess(data.message);
+      setBulkInput("");
+      setPage(1);
+      fetchApprovedVoters();
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to bulk add voters");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleToggleEligibility = async (id) => {
+    setError("");
+    setSuccess("");
+    try {
+      const { data } = await api.patch(`/admin/approved-voters/${id}/toggle-eligibility`);
+      setSuccess(data.message);
+      fetchApprovedVoters();
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to change eligibility");
+    }
+  };
+
   const handleDeleteVoter = async (id) => {
-    if (!window.confirm("Are you sure you want to remove this email from the pre-approved list?")) {
+    if (!window.confirm("Are you sure you want to remove this voter from the eligible list?")) {
       return;
     }
 
@@ -75,10 +110,10 @@ const ApprovedVoters = () => {
     setSuccess("");
     try {
       await api.delete(`/admin/approved-voters/${id}`);
-      setSuccess("Email successfully removed.");
+      setSuccess("Voter successfully removed.");
       fetchApprovedVoters();
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to remove email");
+      setError(err.response?.data?.error || "Failed to remove voter");
     }
   };
 
@@ -91,14 +126,8 @@ const ApprovedVoters = () => {
     const reader = new FileReader();
     reader.onload = (event) => {
       const text = event.target.result;
-      // Extract emails using regex
-      const emailsFound = text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi) || [];
-      if (emailsFound.length === 0) {
-        setError("No emails found inside the uploaded file.");
-        return;
-      }
-      setInputEmails(emailsFound.join("\n"));
-      setSuccess(`Extracted ${emailsFound.length} email(s) from file. Click 'Save' to approve them.`);
+      setBulkInput(text);
+      setSuccess("File content loaded into bulk box. Click 'Import Bulk List' to save.");
     };
     reader.onerror = () => {
       setError("Error reading file.");
@@ -108,9 +137,9 @@ const ApprovedVoters = () => {
 
   return (
     <div className="page">
-      <h2>Voter Pre-Approval List</h2>
+      <h2>Pre-Registered Student Eligibility List</h2>
       <p style={{ color: "var(--text-secondary)", marginBottom: "1.5rem" }}>
-        Pre-approve voter email addresses. Only users with emails on this list will be allowed to register. If the list is completely empty, any email can register.
+        Only pre-registered students with an active Roll Number / Register Number on this list are eligible to register and cast a vote.
       </p>
 
       {error && <ErrorMessage message={error} />}
@@ -119,17 +148,63 @@ const ApprovedVoters = () => {
       <div className="grid" style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "2rem" }}>
         {/* Left Column: Add Voters */}
         <div>
-          <div className="card">
-            <h3>Add Pre-Approved Voters</h3>
-            <form onSubmit={handleAddVoters} style={{ marginTop: "1rem" }}>
+          <div className="card" style={{ marginBottom: "1.5rem" }}>
+            <h3>Add Single Eligible Student</h3>
+            <form onSubmit={handleSingleAdd} style={{ marginTop: "1rem" }}>
               <div className="form-group">
-                <label>Voter Emails (Comma or newline separated)</label>
-                <textarea
-                  rows="6"
-                  value={inputEmails}
-                  onChange={(e) => setInputEmails(e.target.value)}
-                  placeholder="voter1@test.com&#10;voter2@test.com"
+                <label>Roll Number / Register Number *</label>
+                <input
+                  type="text"
+                  value={rollNumberInput}
+                  onChange={(e) => setRollNumberInput(e.target.value)}
+                  placeholder="21CS001"
                   required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Student Name</label>
+                <input
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  placeholder="Alice Smith"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Registered Email</label>
+                <input
+                  type="email"
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  placeholder="alice@college.edu"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-primary"
+                style={{ width: "100%", marginTop: "0.5rem" }}
+                disabled={processing}
+              >
+                {processing ? "Saving..." : "Add Eligible Student"}
+              </button>
+            </form>
+          </div>
+
+          <div className="card">
+            <h3>Bulk Add / CSV Import</h3>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.75rem" }}>
+              Format per line: <code>RollNumber, StudentName, RegisteredEmail</code>
+            </p>
+            <form onSubmit={handleBulkAdd}>
+              <div className="form-group">
+                <textarea
+                  rows="5"
+                  value={bulkInput}
+                  onChange={(e) => setBulkInput(e.target.value)}
+                  placeholder="21CS001, Alice Smith, alice@college.edu&#10;21CS002, Bob Jones, bob@college.edu"
                   style={{ width: "100%", padding: "0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--text-primary)" }}
                 />
               </div>
@@ -146,11 +221,11 @@ const ApprovedVoters = () => {
 
               <button
                 type="submit"
-                className="btn btn-primary"
+                className="btn btn-secondary"
                 style={{ width: "100%", marginTop: "0.5rem" }}
                 disabled={processing}
               >
-                {processing ? "Saving..." : "Save Approved Emails"}
+                {processing ? "Saving..." : "Import Bulk List"}
               </button>
             </form>
           </div>
@@ -160,10 +235,10 @@ const ApprovedVoters = () => {
         <div>
           <div className="card">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <h3>Approved Voters ({total})</h3>
+              <h3>Eligible Voters ({total})</h3>
               <input
                 type="text"
-                placeholder="Search email..."
+                placeholder="Search Roll No / Name / Email..."
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -184,14 +259,34 @@ const ApprovedVoters = () => {
                 <table className="table" style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ borderBottom: "2px solid var(--border)" }}>
-                      <th style={{ textAlign: "left", padding: "0.5rem" }}>Email Address</th>
-                      <th style={{ textAlign: "right", padding: "0.5rem" }}>Action</th>
+                      <th style={{ textAlign: "left", padding: "0.5rem" }}>Roll / Reg No</th>
+                      <th style={{ textAlign: "left", padding: "0.5rem" }}>Name / Email</th>
+                      <th style={{ textAlign: "center", padding: "0.5rem" }}>Status</th>
+                      <th style={{ textAlign: "right", padding: "0.5rem" }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {voters.map((voter) => (
                       <tr key={voter._id} style={{ borderBottom: "1px solid var(--border)" }}>
-                        <td style={{ padding: "0.5rem" }}>{voter.email}</td>
+                        <td style={{ padding: "0.5rem", fontWeight: "bold" }}>{voter.rollNumber}</td>
+                        <td style={{ padding: "0.5rem", fontSize: "0.9rem" }}>
+                          <div>{voter.name || "N/A"}</div>
+                          <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>{voter.email || "No email linked"}</div>
+                        </td>
+                        <td style={{ textAlign: "center", padding: "0.5rem" }}>
+                          <span
+                            className="badge"
+                            style={{
+                              cursor: "pointer",
+                              background: voter.isEligible ? "#f0fdf4" : "#fef2f2",
+                              color: voter.isEligible ? "var(--success)" : "var(--danger)",
+                            }}
+                            onClick={() => handleToggleEligibility(voter._id)}
+                            title="Click to toggle eligibility"
+                          >
+                            {voter.isEligible ? "Eligible" : "Ineligible"}
+                          </span>
+                        </td>
                         <td style={{ textAlign: "right", padding: "0.5rem" }}>
                           <button
                             onClick={() => handleDeleteVoter(voter._id)}

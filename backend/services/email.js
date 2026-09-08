@@ -1,18 +1,30 @@
 const nodemailer = require("nodemailer");
 const logger = require("../utils/logger");
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT, 10),
-  secure: process.env.SMTP_SECURE === 'true',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
+const getTransporter = () => {
+  if (process.env.SMTP_HOST === 'smtp.gmail.com' || process.env.SMTP_USER?.endsWith('@gmail.com')) {
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
+  }
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT, 10) || 465,
+    secure: process.env.SMTP_SECURE === 'true',
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASSWORD,
+    },
+  });
+};
 
 const sendEmail = async (to, subject, text) => {
   try {
+    const transporter = getTransporter();
     await transporter.sendMail({
       from: process.env.SMTP_USER,
       to,

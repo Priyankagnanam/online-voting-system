@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 
 const Register = () => {
   const [name, setName] = useState("");
+  const [rollNumber, setRollNumber] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -21,7 +22,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await api.post("/auth/register", { name, email, password });
+      await api.post("/auth/register", { name, rollNumber, email, password });
       setSuccess("Registration successful! Please verify your email.");
       setTimeout(() => navigate("/verify-otp", { state: { email } }), 1500);
     } catch (err) {
@@ -33,7 +34,7 @@ const Register = () => {
 
   return (
     <div className="auth-page">
-      <h2>Register</h2>
+      <h2>Student Registration</h2>
       <ErrorMessage message={error} />
       {success && <div className="success-message">{success}</div>}
       <form onSubmit={handleSubmit}>
@@ -45,6 +46,17 @@ const Register = () => {
             onChange={(e) => setName(e.target.value)}
             required
             minLength={2}
+            placeholder="John Doe"
+          />
+        </div>
+        <div className="form-group">
+          <label>Roll Number / Register Number</label>
+          <input
+            type="text"
+            value={rollNumber}
+            onChange={(e) => setRollNumber(e.target.value.toUpperCase())}
+            required
+            placeholder="21CS001"
           />
         </div>
         <div className="form-group">
@@ -54,6 +66,7 @@ const Register = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            placeholder="student@college.edu"
           />
         </div>
         <div className="form-group">

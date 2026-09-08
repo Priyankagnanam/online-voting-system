@@ -1,14 +1,34 @@
 const mongoose = require("mongoose");
 
 const approvedVoterSchema = new mongoose.Schema({
+  rollNumber: {
+    type: String,
+    required: [true, "Roll/Register Number is required"],
+    unique: true,
+    uppercase: true,
+    trim: true,
+  },
+  name: {
+    type: String,
+    trim: true,
+    default: "",
+  },
   email: {
     type: String,
-    required: [true, "Email is required"],
-    unique: true,
     lowercase: true,
     trim: true,
-    match: [/^\S+@\S+\.\S+$/, "Please enter a valid email"],
+    default: "",
   },
+  isEligible: {
+    type: Boolean,
+    default: true,
+  },
+  votedElections: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Election",
+    },
+  ],
   createdAt: {
     type: Date,
     default: Date.now,

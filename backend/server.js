@@ -26,14 +26,30 @@ app.use(helmet({
 
 // CORS configuration
 const allowedOrigins = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(',').map(s => s.trim())
-  : ['http://localhost:3000'];
+  ? process.env.FRONTEND_URL.split(',').map(s => s.trim().replace(/\/+$/, ''))
+  : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'];
 
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, curl, server-to-server)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
+
+    // In development, permit any localhost or 127.0.0.1 port
+    if (process.env.NODE_ENV !== 'production') {
+      if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+        return callback(null, true);
+      }
+    }
+
+    const cleanOrigin = origin.replace(/\/+$/, '');
+    const isAllowed = allowedOrigins.some(allowed => {
+      const cleanAllowed = allowed.replace(/\/+$/, '');
+      return cleanOrigin === cleanAllowed || 
+             cleanOrigin === `https://${cleanAllowed}` || 
+             cleanOrigin === `http://${cleanAllowed}`;
+    }) || cleanOrigin.endsWith('.onrender.com');
+
+    if (isAllowed) {
       return callback(null, true);
     }
     return callback(new Error('Not allowed by CORS'));
@@ -68,6 +84,10 @@ app.use((req, res, next) => {
 
 // Health endpoints
 app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 

@@ -8,35 +8,56 @@ const logger = require("../utils/logger");
 
 const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, rollNumber } = req.body;
+    const cleanEmail = email ? email.toLowerCase().trim() : "";
+    const cleanRoll = rollNumber ? rollNumber.trim().toUpperCase() : "";
 
     // Check if voter pre-approval is required (if list is not empty)
     const approvedCount = await ApprovedVoter.countDocuments();
     if (approvedCount > 0) {
-      const isApproved = await ApprovedVoter.findOne({ email: email.toLowerCase().trim() });
-      if (!isApproved) {
+      const queryConditions = [];
+      if (cleanRoll) queryConditions.push({ rollNumber: cleanRoll });
+      if (cleanEmail) queryConditions.push({ email: cleanEmail });
+
+      const isApproved = await ApprovedVoter.findOne({
+        $or: queryConditions.length > 0 ? queryConditions : [{ email: cleanEmail }],
+      });
+
+      if (!isApproved || isApproved.isEligible === false) {
         return res.status(400).json({
-          error: "Your email is not on the pre-approved voter list. Please contact the administrator.",
+          error: "You are not registered as an eligible voter.",
         });
       }
     }
 
-    const existing = await User.findOne({ email });
-    if (existing) {
+    const existingEmail = await User.findOne({ email: cleanEmail });
+    if (existingEmail) {
       return res.status(400).json({ error: "Email already registered" });
     }
 
-    const user = await User.create({ name, email, passwordHash: password });
+    if (cleanRoll) {
+      const existingRoll = await User.findOne({ rollNumber: cleanRoll });
+      if (existingRoll) {
+        return res.status(400).json({ error: "This Roll/Register Number is already registered." });
+      }
+    }
+
+    const user = await User.create({
+      name,
+      email: cleanEmail,
+      rollNumber: cleanRoll || undefined,
+      passwordHash: password,
+    });
 
     const otp = generateOTP();
     await OTP.create({
-      email,
+      email: cleanEmail,
       otpHash: otp,
       purpose: "verification",
       expiresAt: new Date(Date.now() + 10 * 60 * 1000),
     });
 
-    await sendOTP(email, otp, "verification");
+    await sendOTP(cleanEmail, otp, "verification");
 
     res.status(201).json({
       message: "Registration successful. Please check your email for the OTP.",

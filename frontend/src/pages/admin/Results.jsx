@@ -12,7 +12,10 @@ const Results = () => {
   useEffect(() => {
     fetchResults();
 
-    const socketUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    const rawSocketUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    const socketUrl = (rawSocketUrl.startsWith('http://') || rawSocketUrl.startsWith('https://'))
+      ? rawSocketUrl
+      : `https://${rawSocketUrl}`;
     const socket = io(socketUrl, {
       withCredentials: true,
     });

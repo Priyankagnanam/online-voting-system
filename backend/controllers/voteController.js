@@ -5,10 +5,13 @@ const Candidate = require('../models/Candidate');
 const User = require('../models/User');
 const logger = require('../utils/logger');
 
+const ApprovedVoter = require('../models/ApprovedVoter');
+
 const castVote = async (req, res) => {
   try {
     const { electionId, candidateId } = req.body;
     const voterId = req.user._id;
+    const user = req.user;
 
     // 1. Verify election exists
     const election = await Election.findById(electionId);
@@ -34,28 +37,58 @@ const castVote = async (req, res) => {
       return res.status(400).json({ error: 'Invalid candidate for this election' });
     }
 
-    // 4. Generate deterministic voterIdHash to prevent double voting anonymously
+    // 4. Pre-registered voter & eligibility check on backend
+    const approvedCount = await ApprovedVoter.countDocuments();
+    let approvedVoter = null;
+    if (approvedCount > 0) {
+      const conditions = [];
+      if (user.rollNumber) conditions.push({ rollNumber: user.rollNumber });
+      if (user.email) conditions.push({ email: user.email.toLowerCase() });
+
+      approvedVoter = await ApprovedVoter.findOne({ $or: conditions });
+      if (!approvedVoter || approvedVoter.isEligible === false) {
+        return res.status(400).json({ error: 'You are not registered as an eligible voter.' });
+      }
+
+      if (approvedVoter.votedElections && approvedVoter.votedElections.some(id => id.toString() === electionId.toString())) {
+        return res.status(400).json({ error: 'You have already voted.' });
+      }
+    }
+
+    // Check user votedElections
+    if (user.votedElections && user.votedElections.some(id => id.toString() === electionId.toString())) {
+      return res.status(400).json({ error: 'You have already voted.' });
+    }
+
+    // 5. Generate deterministic voterIdHash based on Roll Number / Student ID (or User ID fallback)
+    const voterKey = user.rollNumber || (approvedVoter ? approvedVoter.rollNumber : voterId.toString());
     const voterIdHash = crypto
       .createHash('sha256')
-      .update(voterId.toString() + electionId.toString() + (process.env.JWT_SECRET || 'secret-salt'))
+      .update(voterKey.toString().toUpperCase() + electionId.toString() + (process.env.JWT_SECRET || 'secret-salt'))
       .digest('hex');
 
     // Check if already voted (application-level check)
     const existingVote = await Vote.findOne({ voterIdHash, electionId });
     if (existingVote) {
-      return res.status(400).json({ error: 'You have already voted in this election' });
+      return res.status(400).json({ error: 'You have already voted.' });
     }
 
-    // 5. Generate secure random receipt hash for vote audit/verifiability
+    // 6. Generate secure random receipt hash for vote audit/verifiability
     const receiptHash = crypto.randomBytes(16).toString('hex');
 
-    // 6. Cast vote atomically
+    // 7. Cast vote atomically in DB
     const vote = await Vote.create({ voterIdHash, electionId, candidateId, receiptHash });
 
-    // 7. Update user's voted elections list
+    // 8. Atomically update voter's hasVoted / votedElections state across User and ApprovedVoter tables
     await User.findByIdAndUpdate(voterId, {
       $addToSet: { votedElections: electionId },
     });
+
+    if (approvedVoter) {
+      await ApprovedVoter.findByIdAndUpdate(approvedVoter._id, {
+        $addToSet: { votedElections: electionId },
+      });
+    }
 
     logger.info('Vote cast', {
       electionId: electionId.toString(),
@@ -80,7 +113,7 @@ const castVote = async (req, res) => {
   } catch (error) {
     // Handle duplicate key error (database-level duplicate vote prevention)
     if (error.code === 11000) {
-      return res.status(400).json({ error: 'You have already voted in this election' });
+      return res.status(400).json({ error: 'You have already voted.' });
     }
     logger.error('Cast vote error', { error: error.message, requestId: req.id });
     res.status(500).json({ error: 'Server error' });

@@ -159,27 +159,50 @@ const getAllResults = async (req, res) => {
 // Approved Voters List Management
 const addApprovedVoters = async (req, res) => {
   try {
-    const { emails } = req.body;
-    if (!Array.isArray(emails)) {
-      return res.status(400).json({ error: "Emails list must be an array" });
+    const { voters } = req.body; // Array of objects [{ rollNumber, name, email }] or string lines
+    if (!Array.isArray(voters)) {
+      return res.status(400).json({ error: "Voters list must be an array of objects or strings" });
     }
 
-    const docs = emails
-      .map(e => e.trim().toLowerCase())
-      .filter(e => /^\S+@\S+\.\S+$/.test(e))
-      .map(email => ({ email }));
+    const docs = voters
+      .map(item => {
+        if (typeof item === 'string') {
+          const parts = item.split(',').map(s => s.trim());
+          // format: rollNumber, name, email OR rollNumber/email
+          if (parts.length >= 3) {
+            return { rollNumber: parts[0].toUpperCase(), name: parts[1], email: parts[2].toLowerCase() };
+          }
+          if (parts[0].includes('@')) {
+            return { rollNumber: parts[0].split('@')[0].toUpperCase(), email: parts[0].toLowerCase() };
+          }
+          return { rollNumber: parts[0].toUpperCase() };
+        }
+        if (typeof item === 'object' && item !== null) {
+          const rollNumber = item.rollNumber ? item.rollNumber.toString().trim().toUpperCase() : "";
+          const email = item.email ? item.email.toString().trim().toLowerCase() : "";
+          const name = item.name ? item.name.toString().trim() : "";
+          if (rollNumber || email) {
+            return {
+              rollNumber: rollNumber || (email ? email.split('@')[0].toUpperCase() : ""),
+              name,
+              email,
+              isEligible: item.isEligible !== undefined ? Boolean(item.isEligible) : true,
+            };
+          }
+        }
+        return null;
+      })
+      .filter(doc => doc && doc.rollNumber);
 
     if (docs.length === 0) {
-      return res.status(400).json({ error: "No valid emails found in the request" });
+      return res.status(400).json({ error: "No valid voter Roll/Register Numbers found in the request" });
     }
 
-    // insertMany with ordered: false lets mongoose continue inserting even if some throw duplicate errors
     let createdCount = 0;
     try {
       const result = await ApprovedVoter.insertMany(docs, { ordered: false });
       createdCount = result.length;
     } catch (err) {
-      // Catch duplicate key errors and calculate successfully inserted documents
       if (err.writeErrors) {
         createdCount = docs.length - err.writeErrors.length;
       } else {
@@ -187,7 +210,7 @@ const addApprovedVoters = async (req, res) => {
       }
     }
 
-    res.status(201).json({ message: `${createdCount} voter emails pre-approved successfully.` });
+    res.status(201).json({ message: `${createdCount} eligible student voters registered successfully.` });
   } catch (error) {
     logger.error("Add approved voters error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });
@@ -199,9 +222,18 @@ const getApprovedVoters = async (req, res) => {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
     const skip = (page - 1) * limit;
-    const search = req.query.search ? req.query.search.trim().toLowerCase() : "";
+    const search = req.query.search ? req.query.search.trim() : "";
+    const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-    const query = search ? { email: { $regex: search, $options: "i" } } : {};
+    const query = search
+      ? {
+          $or: [
+            { rollNumber: { $regex: escapedSearch, $options: "i" } },
+            { name: { $regex: escapedSearch, $options: "i" } },
+            { email: { $regex: escapedSearch, $options: "i" } },
+          ],
+        }
+      : {};
 
     const voters = await ApprovedVoter.find(query)
       .sort({ createdAt: -1 })
@@ -220,6 +252,26 @@ const getApprovedVoters = async (req, res) => {
   }
 };
 
+const toggleApprovedVoterEligibility = async (req, res) => {
+  try {
+    const voter = await ApprovedVoter.findById(req.params.id);
+    if (!voter) {
+      return res.status(404).json({ error: "Eligible voter record not found" });
+    }
+
+    voter.isEligible = !voter.isEligible;
+    await voter.save();
+
+    res.json({
+      message: `Voter eligibility updated to ${voter.isEligible ? 'Eligible' : 'Ineligible'}`,
+      voter,
+    });
+  } catch (error) {
+    logger.error("Toggle voter eligibility error", { error: error.message, requestId: req.id });
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
 const deleteApprovedVoter = async (req, res) => {
   try {
     const voter = await ApprovedVoter.findById(req.params.id);
@@ -228,7 +280,7 @@ const deleteApprovedVoter = async (req, res) => {
     }
 
     await voter.deleteOne();
-    res.json({ message: "Voter email removed from pre-approved list" });
+    res.json({ message: "Voter removed from pre-approved list" });
   } catch (error) {
     logger.error("Delete approved voter error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });
@@ -244,5 +296,6 @@ module.exports = {
   getAllResults,
   addApprovedVoters,
   getApprovedVoters,
+  toggleApprovedVoterEligibility,
   deleteApprovedVoter,
 };
