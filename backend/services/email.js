@@ -1,37 +1,42 @@
-const nodemailer = require("nodemailer");
 const logger = require("../utils/logger");
-
-const getTransporter = () => {
-  if (process.env.SMTP_HOST === 'smtp.gmail.com' || process.env.SMTP_USER?.endsWith('@gmail.com')) {
-    return nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD,
-      },
-    });
-  }
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT, 10) || 465,
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASSWORD,
-    },
-  });
-};
 
 const sendEmail = async (to, subject, text) => {
   try {
-    const transporter = getTransporter();
-    await transporter.sendMail({
-      from: process.env.SMTP_USER,
-      to,
-      subject,
-      text,
+    const brevoApiKey = process.env.BREVO_API_KEY;
+    const senderEmail = process.env.ADMIN_EMAIL || "gpriyanka17052006@gmail.com";
+    
+    if (!brevoApiKey) {
+      throw new Error("BREVO_API_KEY is not set. Please add it to your environment variables.");
+    }
+
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "api-key": brevoApiKey,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        sender: {
+          name: "Online Voting System",
+          email: senderEmail
+        },
+        to: [
+          {
+            email: to
+          }
+        ],
+        subject: subject,
+        textContent: text
+      })
     });
-    logger.info(`Email sent to ${to}`);
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      throw new Error(`Brevo API error: ${response.status} ${errorData}`);
+    }
+
+    logger.info(`Email sent successfully to ${to} via Brevo`);
     return true;
   } catch (error) {
     logger.error(`Email send error: ${error.message}`);
