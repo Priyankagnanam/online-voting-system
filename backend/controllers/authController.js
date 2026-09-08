@@ -47,20 +47,11 @@ const register = async (req, res) => {
       email: cleanEmail,
       rollNumber: cleanRoll || undefined,
       passwordHash: password,
+      isVerified: true,
     });
-
-    const otp = generateOTP();
-    await OTP.create({
-      email: cleanEmail,
-      otpHash: otp,
-      purpose: "verification",
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-    });
-
-    await sendOTP(cleanEmail, otp, "verification");
 
     res.status(201).json({
-      message: "Registration successful. Please check your email for the OTP.",
+      message: "Registration successful. You can log in now.",
       userId: user._id,
     });
   } catch (error) {
@@ -72,6 +63,13 @@ const register = async (req, res) => {
 const verifyOTP = async (req, res) => {
   try {
     const { email, otp, purpose } = req.body;
+
+    const user = await User.findOne({ email });
+    if (user && user.isVerified) {
+      return res.json({
+        message: user.role === "admin" ? "Account is already active." : "Email already verified. You can log in now.",
+      });
+    }
 
     const otpRecord = await OTP.findOne({
       email,
@@ -125,7 +123,8 @@ const login = async (req, res) => {
     }
 
     if (!user.isVerified) {
-      return res.status(403).json({ error: "Please verify your email first" });
+      user.isVerified = true;
+      await user.save();
     }
 
     const isMatch = await user.comparePassword(password);
@@ -171,7 +170,7 @@ const resendOTP = async (req, res) => {
     }
 
     if (user.isVerified) {
-      return res.status(400).json({ error: "Email is already verified. You can log in." });
+      return res.json({ message: "Email is already verified. You can log in now." });
     }
 
     const otp = generateOTP();

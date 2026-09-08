@@ -23,8 +23,8 @@ const Register = () => {
 
     try {
       await api.post("/auth/register", { name, rollNumber, email, password });
-      setSuccess("Registration successful! Please verify your email.");
-      setTimeout(() => navigate("/verify-otp", { state: { email } }), 1500);
+      setSuccess("Registration successful! You can log in now.");
+      setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
       setError(err.response?.data?.error || "Registration failed");
     } finally {
