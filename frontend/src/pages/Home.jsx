@@ -7,10 +7,8 @@ import {
   Radar,
   LogIn,
   UserPlus,
-  LayoutDashboard,
   CheckCircle2,
 } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
 
 const features = [
   {
@@ -36,8 +34,6 @@ const features = [
 ];
 
 const Home = () => {
-  const { user } = useAuth();
-
   return (
     <div className="page home-page">
       <div className="hero">
@@ -55,27 +51,15 @@ const Home = () => {
         </p>
 
         <div className="hero-cta">
-          {!user ? (
-            <>
-              <Link to="/register" className="btn btn-primary">
-                <UserPlus size={17} /> Register as Voter
-              </Link>
-              <Link to="/login" className="btn btn-secondary">
-                <LogIn size={17} /> Voter Login
-              </Link>
-              <Link to="/admin/login" className="btn btn-outline">
-                <ShieldCheck size={17} /> Admin Login
-              </Link>
-            </>
-          ) : user.role === "admin" ? (
-            <Link to="/admin/dashboard" className="btn btn-primary">
-              <LayoutDashboard size={17} /> Admin Dashboard
-            </Link>
-          ) : (
-            <Link to="/dashboard" className="btn btn-primary">
-              <LayoutDashboard size={17} /> Go to Dashboard
-            </Link>
-          )}
+          <Link to="/register" className="btn btn-primary">
+            <UserPlus size={17} /> Register as Voter
+          </Link>
+          <Link to="/login" className="btn btn-secondary">
+            <LogIn size={17} /> Voter Login
+          </Link>
+          <Link to="/admin/login" className="btn btn-outline">
+            <ShieldCheck size={17} /> Admin Login
+          </Link>
         </div>
 
         <div className="trust-row">
