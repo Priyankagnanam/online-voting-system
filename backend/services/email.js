@@ -1,16 +1,35 @@
 const nodemailer = require("nodemailer");
 const dns = require("dns");
+const net = require("net");
 const logger = require("../utils/logger");
 
 // Prefer IPv4 for outbound SMTP: providers like Render/Vercel often have no IPv6
 // route, and smtp.gmail.com resolves to IPv6 first, causing ENETUNREACH.
 dns.setDefaultResultOrder("ipv4first");
 
-const getTransporter = (port, secure) => {
+// nodemailer resolves hostnames itself (A + AAAA) and may pick an unroutable IPv6
+// address, so pin the connection to an explicit IPv4 address (keep hostname for TLS SNI).
+const getHostInfo = async () => {
+  const host = (process.env.SMTP_HOST || "smtp.gmail.com").trim();
+  if (net.isIP(host) !== 0) {
+    return { host, servername: host };
+  }
+  try {
+    const addresses = await dns.promises.resolve4(host);
+    if (addresses && addresses.length > 0) {
+      return { host: addresses[0], servername: host };
+    }
+  } catch (err) {
+    logger.error(`DNS resolve4 failed for ${host}: ${err.message}`);
+  }
+  return { host, servername: undefined };
+};
+
+const getTransporter = (port, secure, hostInfo) => {
   const smtpUser = (process.env.SMTP_USER || process.env.ADMIN_EMAIL || "").trim();
   const smtpPass = (process.env.SMTP_PASSWORD || "").trim();
-  return nodemailer.createTransport({
-    host: (process.env.SMTP_HOST || "smtp.gmail.com").trim(),
+  const transportOpts = {
+    host: hostInfo.host,
     port,
     secure,
     connectionTimeout: 15000,
@@ -20,7 +39,11 @@ const getTransporter = (port, secure) => {
       user: smtpUser,
       pass: smtpPass,
     },
-  });
+  };
+  if (hostInfo.servername) {
+    transportOpts.servername = hostInfo.servername;
+  }
+  return nodemailer.createTransport(transportOpts);
 };
 
 const sendViaSMTP = async (to, subject, text) => {
@@ -33,10 +56,12 @@ const sendViaSMTP = async (to, subject, text) => {
     attempts.push([587, false]);
   }
 
+  const hostInfo = await getHostInfo();
+
   let lastErr;
   for (const [port, secure] of attempts) {
     try {
-      const transporter = getTransporter(port, secure);
+      const transporter = getTransporter(port, secure, hostInfo);
       await transporter.sendMail({ from, to, subject, text });
       return;
     } catch (err) {
