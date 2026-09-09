@@ -5,7 +5,6 @@ import {
   UserCheck,
   BarChart3,
   Radar,
-  Vote,
   LogIn,
   UserPlus,
   CheckCircle2,
@@ -38,55 +37,63 @@ const Home = () => {
   return (
     <div className="page home-page page-bg">
       <div className="hero">
-        <div className="hero-visual" aria-hidden="true">
-          <div className="hv-card hv-card-1">
-            <Landmark size={42} strokeWidth={1.5} />
+        <div className="hero-content">
+          <span className="hero-mark">
+            <Landmark size={32} />
+          </span>
+          <div className="hero-badge">
+            <CheckCircle2 size={14} />
+            Trusted &amp; Transparent
           </div>
-          <div className="hv-card hv-card-2">
-            <Vote size={26} strokeWidth={1.5} />
-          </div>
-          <div className="hv-bar">
-            <span />
-            <span />
-            <span />
-            <span />
-          </div>
-        </div>
-        <span className="hero-mark">
-          <Landmark size={32} />
-        </span>
-        <div className="hero-badge">
-          <CheckCircle2 size={14} />
-          Trusted &amp; Transparent
-        </div>
-        <h1>Online Voting System</h1>
-        <p className="hero-lead">
-          A secure and transparent platform for conducting elections.
-          Register, verify your identity, and cast your vote with confidence.
-        </p>
+          <h1>Online Voting System</h1>
+          <p className="hero-lead">
+            A secure and transparent platform for conducting elections.
+            Register, verify your identity, and cast your vote with confidence.
+          </p>
 
-        <div className="hero-cta">
-          <Link to="/register" className="btn btn-primary">
-            <UserPlus size={17} /> Register as Voter
-          </Link>
-          <Link to="/login" className="btn btn-outline">
-            <LogIn size={17} /> Voter Login
-          </Link>
-          <Link to="/admin/login" className="btn btn-ghost">
-            <ShieldCheck size={17} /> Admin Login
-          </Link>
+          <div className="hero-cta">
+            <Link to="/register" className="btn btn-primary">
+              <UserPlus size={17} /> Register as Voter
+            </Link>
+            <Link to="/login" className="btn btn-outline">
+              <LogIn size={17} /> Voter Login
+            </Link>
+            <Link to="/admin/login" className="btn btn-ghost">
+              <ShieldCheck size={17} /> Admin Login
+            </Link>
+          </div>
+
+          <div className="trust-row">
+            <span className="trust-item">
+              <ShieldCheck size={16} /> Encrypted &amp; verified
+            </span>
+            <span className="trust-item">
+              <UserCheck size={16} /> One vote per voter
+            </span>
+            <span className="trust-item">
+              <BarChart3 size={16} /> Transparent results
+            </span>
+          </div>
         </div>
 
-        <div className="trust-row">
-          <span className="trust-item">
-            <ShieldCheck size={16} /> Encrypted &amp; verified
-          </span>
-          <span className="trust-item">
-            <UserCheck size={16} /> One vote per voter
-          </span>
-          <span className="trust-item">
-            <BarChart3 size={16} /> Transparent results
-          </span>
+        <div className="hero-art" aria-hidden="true">
+          <div className="ha-landmark">
+            <Landmark size={52} strokeWidth={1.4} />
+          </div>
+          <div className="ha-chip">
+            <CheckCircle2 size={18} />
+            One Voter, One Vote
+          </div>
+          <div className="ha-chip">
+            <BarChart3 size={18} />
+            Transparent Live Results
+          </div>
+          <div className="ha-bars">
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
         </div>
       </div>
 
