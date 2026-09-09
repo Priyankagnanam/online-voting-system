@@ -9,7 +9,7 @@ const AuthLayout = ({ title, subtitle, children, bullets }) => {
     ];
 
   return (
-    <div className="auth-shell">
+    <div className="auth-shell page-bg">
       <div className="auth-brand">
         <span className="auth-brand-logo">
           <Landmark size={26} />

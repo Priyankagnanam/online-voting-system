@@ -35,7 +35,7 @@ const features = [
 
 const Home = () => {
   return (
-    <div className="page home-page">
+    <div className="page home-page page-bg">
       <div className="hero">
         <span className="hero-mark">
           <Landmark size={32} />
