@@ -91,8 +91,29 @@ const sendViaBrevo = async (to, subject, text) => {
     }),
   });
   if (!response.ok) {
-    throw new Error(`Brevo API error: ${response.status}`);
+    throw new Error(`Brevo API error: ${response.status} ${response.statusText}`);
   }
+};
+
+// Brevo SMTP relay on port 2525 (Render blocks egress on 465/587 but 2525 is open)
+const sendViaBrevoSmtp = async (to, subject, text) => {
+  const brevoApiKey = process.env.BREVO_API_KEY;
+  if (!brevoApiKey) throw new Error("BREVO_API_KEY is not configured");
+  const smtpLogin = process.env.BREVO_SMTP_USER || brevoApiKey;
+  const senderEmail = process.env.ADMIN_EMAIL || "gpriyanka17052006@gmail.com";
+  const transporter = nodemailer.createTransport({
+    host: "smtp-relay.brevo.com",
+    port: 2525,
+    secure: false,
+    connectionTimeout: 15000,
+    greetingTimeout: 10000,
+    socketTimeout: 20000,
+    auth: {
+      user: smtpLogin,
+      pass: brevoApiKey,
+    },
+  });
+  await transporter.sendMail({ from: senderEmail, to, subject, text });
 };
 
 const logEmailContents = (details, text) => {
@@ -107,6 +128,7 @@ const logEmailContents = (details, text) => {
 
 const sendEmail = async (to, subject, text) => {
   const details = { to, subject };
+  const failures = [];
 
   if (process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
     try {
@@ -114,30 +136,40 @@ const sendEmail = async (to, subject, text) => {
       logger.info(`Email sent successfully to ${to} via SMTP`);
       return { ok: true, method: "smtp" };
     } catch (error) {
-      logger.error(`Email send error: ${error.message}`);
-      if (process.env.BREVO_API_KEY) {
-        try {
-          await sendViaBrevo(to, subject, text);
-          logger.info(`Email sent successfully to ${to} via Brevo (SMTP failed)`);
-          return { ok: true, method: "brevo", fallback: "smtp" };
-        } catch (brevoErr) {
-          logger.error(`Brevo fallback failed: ${brevoErr.message}`);
-        }
-      }
-      logEmailContents(details, text);
-      return { ok: false, method: "smtp", error: error.message };
+      failures.push(`smtp:${error.message}`);
+      logger.error(`SMTP send error: ${error.message}`);
     }
   }
 
-  try {
-    await sendViaBrevo(to, subject, text);
-    logger.info(`Email sent successfully to ${to} via Brevo`);
-    return { ok: true, method: "brevo" };
-  } catch (error) {
-    logger.error(`Email send error: ${error.message}`);
-    logEmailContents(details, text);
-    return { ok: false, method: "brevo", error: error.message };
+  if (process.env.BREVO_API_KEY) {
+    try {
+      await sendViaBrevo(to, subject, text);
+      logger.info(`Email sent successfully to ${to} via Brevo API`);
+      return { ok: true, method: "brevo" };
+    } catch (error) {
+      failures.push(`brevo-api:${error.message}`);
+      logger.error(`Brevo API send error: ${error.message}`);
+    }
   }
+
+  if (process.env.BREVO_API_KEY) {
+    try {
+      await sendViaBrevoSmtp(to, subject, text);
+      logger.info(`Email sent successfully to ${to} via Brevo SMTP relay`);
+      return { ok: true, method: "brevo-smtp" };
+    } catch (error) {
+      failures.push(`brevo-smtp:${error.message}`);
+      logger.error(`Brevo SMTP relay send error: ${error.message}`);
+    }
+  }
+
+  logEmailContents(details, text);
+  const firstError = failures[0] || "";
+  return {
+    ok: false,
+    method: failures.length ? firstError.split(":")[0] : "unconfigured",
+    error: failures.join(" | ") || "No email provider configured",
+  };
 };
 
 const sendOTP = async (email, otp, purpose) => {
