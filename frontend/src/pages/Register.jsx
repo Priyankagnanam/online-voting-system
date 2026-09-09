@@ -23,13 +23,18 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await api.post("/auth/register", {
+      const { data } = await api.post("/auth/register", {
         name,
         rollNumber: regulationNumber,
         email,
         password,
       });
-      setSuccess("Registration successful! We've sent a verification code to your email. Your account will be active after admin approval.");
+      const emailFailed = data.emailStatus && data.emailStatus.ok === false;
+      setSuccess(
+        emailFailed
+          ? "Account created, but we could not deliver the verification email right now. Use 'Resend OTP' on the next screen or try again shortly."
+          : "Registration successful! We've sent a verification code to your email. Your account will be active after admin approval."
+      );
       setTimeout(() => navigate("/verify-otp", { state: { email } }), 1500);
     } catch (err) {
       setError(err.response?.data?.error || "Registration failed");

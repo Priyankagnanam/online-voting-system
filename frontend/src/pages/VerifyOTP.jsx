@@ -47,7 +47,11 @@ const VerifyOTP = () => {
     setResending(true);
     try {
       const { data } = await api.post("/auth/resend-otp", { email });
-      setSuccess(data.message);
+      setSuccess(
+        data.emailStatus && data.emailStatus.ok === false
+          ? "We could not deliver the OTP email right now. Please try again in a moment."
+          : data.message
+      );
     } catch (err) {
       setError(err.response?.data?.error || "Failed to resend OTP");
     } finally {
@@ -101,6 +105,9 @@ const VerifyOTP = () => {
       </form>
       <p className="auth-footer">
         Already verified? <Link to="/login">Login</Link>
+      </p>
+      <p className="table-muted text-center" style={{ marginTop: "0.5rem", fontSize: "0.8rem" }}>
+        Didn't receive it? Check your Spam / Promotions folder — the sender is gpriyanka17052006@gmail.com (subject "Verify Your Email").
       </p>
     </AuthLayout>
   );

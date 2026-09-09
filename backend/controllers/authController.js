@@ -58,12 +58,13 @@ const register = async (req, res) => {
       expiresAt: new Date(Date.now() + 10 * 60 * 1000),
     });
 
-    await sendOTP(cleanEmail, otp, "verification");
+    const emailStatus = await sendOTP(cleanEmail, otp, "verification");
 
     res.status(201).json({
       message:
         "Registration successful. Please verify your email with the OTP sent to your inbox. Your account will be active after admin approval.",
       userId: user._id,
+      emailStatus,
     });
   } catch (error) {
     logger.error("Register error", { error: error.message, requestId: req.id });
@@ -203,9 +204,9 @@ const resendOTP = async (req, res) => {
       expiresAt: new Date(Date.now() + 10 * 60 * 1000),
     });
 
-    await sendOTP(cleanEmail, otp, "verification");
+    const emailStatus = await sendOTP(cleanEmail, otp, "verification");
 
-    res.json({ message: "A new OTP has been sent to your email." });
+    res.json({ message: "A new OTP has been sent to your email.", emailStatus });
   } catch (error) {
     logger.error("Resend OTP error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });
@@ -229,9 +230,9 @@ const forgotPassword = async (req, res) => {
       expiresAt: new Date(Date.now() + 10 * 60 * 1000),
     });
 
-    await sendOTP(email, otp, "password-reset");
+    const emailStatus = await sendOTP(email, otp, "password-reset");
 
-    res.json({ message: "OTP sent to your email for password reset" });
+    res.json({ message: "OTP sent to your email for password reset", emailStatus });
   } catch (error) {
     logger.error("Forgot password error", { error: error.message, requestId: req.id });
     res.status(500).json({ error: "Server error" });

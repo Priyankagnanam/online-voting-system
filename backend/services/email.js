@@ -65,26 +65,48 @@ const sendViaBrevo = async (to, subject, text) => {
   }
 };
 
+const logEmailContents = (details, text) => {
+  logger.info("--------------------------------------------------");
+  logger.info("EMAIL DELIVERY FAILED - contents:");
+  logger.info(`  To:      ${details.to}`);
+  logger.info(`  Subject: ${details.subject}`);
+  logger.info("  Body:");
+  logger.info(text);
+  logger.info("--------------------------------------------------");
+};
+
 const sendEmail = async (to, subject, text) => {
-  try {
-    if (process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
+  const details = { to, subject };
+
+  if (process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
+    try {
       await sendViaSMTP(to, subject, text);
       logger.info(`Email sent successfully to ${to} via SMTP`);
-      return true;
+      return { ok: true, method: "smtp" };
+    } catch (error) {
+      logger.error(`Email send error: ${error.message}`);
+      if (process.env.BREVO_API_KEY) {
+        try {
+          await sendViaBrevo(to, subject, text);
+          logger.info(`Email sent successfully to ${to} via Brevo (SMTP failed)`);
+          return { ok: true, method: "brevo", fallback: "smtp" };
+        } catch (brevoErr) {
+          logger.error(`Brevo fallback failed: ${brevoErr.message}`);
+        }
+      }
+      logEmailContents(details, text);
+      return { ok: false, method: "smtp", error: error.message };
     }
+  }
+
+  try {
     await sendViaBrevo(to, subject, text);
     logger.info(`Email sent successfully to ${to} via Brevo`);
-    return true;
+    return { ok: true, method: "brevo" };
   } catch (error) {
     logger.error(`Email send error: ${error.message}`);
-    logger.info("--------------------------------------------------");
-    logger.info("EMAIL FALLBACK - Delivery failed or pending, contents:");
-    logger.info(`  To:      ${to}`);
-    logger.info(`  Subject: ${subject}`);
-    logger.info("  Body:");
-    logger.info(text);
-    logger.info("--------------------------------------------------");
-    return true;
+    logEmailContents(details, text);
+    return { ok: false, method: "brevo", error: error.message };
   }
 };
 
