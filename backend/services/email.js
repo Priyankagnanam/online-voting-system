@@ -8,42 +8,44 @@ const logger = require("../utils/logger");
 dns.setDefaultResultOrder("ipv4first");
 
 // nodemailer resolves hostnames itself (A + AAAA) and may pick an unroutable IPv6
-// address, so pin the connection to an explicit IPv4 address (keep hostname for TLS SNI).
+// address (or a blackholed A record), so pin to explicit IPv4 addresses and try them all.
 const getHostInfo = async () => {
   const host = (process.env.SMTP_HOST || "smtp.gmail.com").trim();
   if (net.isIP(host) !== 0) {
-    return { host, servername: host };
+    return { servername: undefined, addresses: [host] };
   }
   try {
     const addresses = await dns.promises.resolve4(host);
     if (addresses && addresses.length > 0) {
-      return { host: addresses[0], servername: host };
+      return { servername: host, addresses: [...new Set(addresses)].slice(0, 6) };
     }
   } catch (err) {
     logger.error(`DNS resolve4 failed for ${host}: ${err.message}`);
   }
-  return { host, servername: undefined };
+  return { servername: undefined, addresses: [host] };
 };
 
 const getTransporter = (port, secure, hostInfo) => {
   const smtpUser = (process.env.SMTP_USER || process.env.ADMIN_EMAIL || "").trim();
   const smtpPass = (process.env.SMTP_PASSWORD || "").trim();
-  const transportOpts = {
-    host: hostInfo.host,
-    port,
-    secure,
-    connectionTimeout: 15000,
-    greetingTimeout: 10000,
-    socketTimeout: 20000,
-    auth: {
-      user: smtpUser,
-      pass: smtpPass,
-    },
-  };
-  if (hostInfo.servername) {
-    transportOpts.servername = hostInfo.servername;
-  }
-  return nodemailer.createTransport(transportOpts);
+  return hostInfo.addresses.map((address) => {
+    const transportOpts = {
+      host: address,
+      port,
+      secure,
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 15000,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    };
+    if (hostInfo.servername) {
+      transportOpts.servername = hostInfo.servername;
+    }
+    return nodemailer.createTransport(transportOpts);
+  });
 };
 
 const sendViaSMTP = async (to, subject, text) => {
@@ -51,22 +53,28 @@ const sendViaSMTP = async (to, subject, text) => {
   const configuredPort = parseInt((process.env.SMTP_PORT || "465").trim(), 10) || 465;
   const configuredSecure = (process.env.SMTP_SECURE || "true").trim() === "true";
 
-  const attempts = [[configuredPort, configuredSecure]];
+  const ports = [[configuredPort, configuredSecure]];
   if (!(configuredPort === 587 && !configuredSecure)) {
-    attempts.push([587, false]);
+    ports.push([587, false]);
   }
 
   const hostInfo = await getHostInfo();
+  const attempts = [];
+  for (const address of hostInfo.addresses) {
+    for (const [port, secure] of ports) {
+      attempts.push([address, port, secure]);
+    }
+  }
 
   let lastErr;
-  for (const [port, secure] of attempts) {
+  for (const [address, port, secure] of attempts) {
+    const [transporter] = getTransporter(port, secure, { ...hostInfo, addresses: [address] });
     try {
-      const transporter = getTransporter(port, secure, hostInfo);
       await transporter.sendMail({ from, to, subject, text });
       return;
     } catch (err) {
       lastErr = err;
-      logger.error(`SMTP attempt failed (port ${port}, secure ${secure}): ${err.message}`);
+      logger.error(`SMTP attempt failed (${address}:${port} secure=${secure}): ${err.message}`);
     }
   }
   throw lastErr;
