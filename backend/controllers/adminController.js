@@ -337,6 +337,65 @@ const updateUserApproval = async (req, res) => {
   }
 };
 
+const getEmailDiagnostics = async (req, res) => {
+  const dns = require("dns");
+  const net = require("net");
+  const results = { dns: {}, tcp: {}, brevo: null, env: {} };
+
+  const host = (process.env.SMTP_HOST || "smtp.gmail.com").trim();
+  const ports = [parseInt((process.env.SMTP_PORT || "465").trim(), 10) || 465, 587];
+
+  try {
+    results.dns.ipv4 = await dns.promises.resolve4(host);
+  } catch (e) {
+    results.dns.ipv4 = `ERR ${e.code}: ${e.message}`;
+  }
+  try {
+    results.dns.ipv6 = await dns.promises.resolve6(host);
+  } catch (e) {
+    results.dns.ipv6 = `ERR ${e.code}: ${e.message}`;
+  }
+
+  const testConnect = (h, p) =>
+    new Promise((resolve) => {
+      const sock = net.createConnection({ host: h, port: p, family: 4, timeout: 5000 });
+      const done = (v) => {
+        sock.destroy();
+        resolve(v);
+      };
+      sock.on("connect", () => done("open"));
+      sock.on("timeout", () => done("timeout"));
+      sock.on("error", (err) => done(`err ${err.code}: ${err.message}`));
+    });
+
+  results.tcp[`${host}:${ports[0]}`] = await testConnect(host, ports[0]);
+  results.tcp[`${host}:${ports[1]}`] = await testConnect(host, ports[1]);
+
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    const resp = await fetch("https://api.brevo.com/v3/account", {
+      signal: ctrl.signal,
+      headers: { accept: "application/json", "api-key": process.env.BREVO_API_KEY || "" },
+    });
+    clearTimeout(timer);
+    results.brevo = `https ${resp.status} (${resp.ok ? "authorized" : "not authorized/other"})`;
+  } catch (e) {
+    results.brevo = `ERR ${e.message}`;
+  }
+
+  results.env = {
+    SMTP_HOST: process.env.SMTP_HOST || "(default smtp.gmail.com)",
+    SMTP_PORT: process.env.SMTP_PORT || "(default 465)",
+    SMTP_SECURE: process.env.SMTP_SECURE || "(default true)",
+    SMTP_USER: process.env.SMTP_USER ? "set" : "(unset)",
+    SMTP_PASSWORD: process.env.SMTP_PASSWORD ? "set" : "(unset)",
+    BREVO_API_KEY: process.env.BREVO_API_KEY ? "set" : "(unset)",
+  };
+
+  res.json(results);
+};
+
 module.exports = {
   getDashboardStats,
   getUsers,
@@ -349,4 +408,5 @@ module.exports = {
   toggleApprovedVoterEligibility,
   deleteApprovedVoter,
   updateUserApproval,
+  getEmailDiagnostics,
 };

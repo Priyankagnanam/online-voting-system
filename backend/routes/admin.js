@@ -14,6 +14,7 @@ const {
   toggleApprovedVoterEligibility,
   deleteApprovedVoter,
   updateUserApproval,
+  getEmailDiagnostics,
 } = require("../controllers/adminController");
 
 const router = express.Router();
@@ -23,6 +24,7 @@ router.get("/users", auth, role("admin"), getUsers);
 router.patch("/users/:id/verify", auth, role("admin"), validateObjectId(), toggleUserVerification);
 router.patch("/users/:id/approval", auth, role("admin"), validateObjectId(), updateUserApproval);
 router.delete("/users/:id", auth, role("admin"), deleteUser);
+router.get("/diagnostics/email", auth, role("admin"), getEmailDiagnostics);
 router.get("/security-alerts", auth, role("admin"), getSecurityAlerts);
 router.get("/results", auth, role("admin"), getAllResults);
 
