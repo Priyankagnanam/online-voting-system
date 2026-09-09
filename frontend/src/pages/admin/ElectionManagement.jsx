@@ -4,6 +4,14 @@ import api from "../../services/api";
 import Loading from "../../components/Loading";
 import ErrorMessage from "../../components/ErrorMessage";
 
+const toLocalInputValue = (iso) => {
+  const d = new Date(iso);
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+
+const toIsoUtc = (value) => (value ? new Date(value).toISOString() : value);
+
 const ElectionManagement = () => {
   const [elections, setElections] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,11 +46,16 @@ const ElectionManagement = () => {
     setError("");
     setSuccess("");
     try {
+      const payload = {
+        ...form,
+        startDate: toIsoUtc(form.startDate),
+        endDate: toIsoUtc(form.endDate),
+      };
       if (editingId) {
-        await api.put(`/elections/${editingId}`, form);
+        await api.put(`/elections/${editingId}`, payload);
         setSuccess("Election updated");
       } else {
-        await api.post("/elections", form);
+        await api.post("/elections", payload);
         setSuccess("Election created");
       }
       setForm({ title: "", description: "", startDate: "", endDate: "" });
@@ -58,8 +71,8 @@ const ElectionManagement = () => {
     setForm({
       title: election.title,
       description: election.description || "",
-      startDate: election.startDate?.slice(0, 16) || "",
-      endDate: election.endDate?.slice(0, 16) || "",
+      startDate: toLocalInputValue(election.startDate),
+      endDate: toLocalInputValue(election.endDate),
     });
     setEditingId(election._id);
     setShowForm(true);
