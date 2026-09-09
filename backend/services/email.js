@@ -14,13 +14,19 @@ const getHostInfo = async () => {
   if (net.isIP(host) !== 0) {
     return { servername: undefined, addresses: [host] };
   }
+  const seen = new Set();
   try {
-    const addresses = await dns.promises.resolve4(host);
-    if (addresses && addresses.length > 0) {
-      return { servername: host, addresses: [...new Set(addresses)].slice(0, 6) };
+    // Google rotates A records per query; gather as many distinct servers as possible
+    for (let i = 0; i < 8; i += 1) {
+      const addresses = await dns.promises.resolve4(host);
+      for (const a of addresses) seen.add(a);
     }
   } catch (err) {
     logger.error(`DNS resolve4 failed for ${host}: ${err.message}`);
+  }
+  const addresses = [...seen].slice(0, 8);
+  if (addresses.length > 0) {
+    return { servername: host, addresses };
   }
   return { servername: undefined, addresses: [host] };
 };
