@@ -134,19 +134,26 @@ const logEmailContents = (details, text) => {
   logger.info("--------------------------------------------------");
 };
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const sendEmail = async (to, subject, text) => {
   const details = { to, subject };
   const failures = [];
 
   if (process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
-    try {
-      await sendViaSMTP(to, subject, text);
-      logger.info(`Email sent successfully to ${to} via SMTP`);
-      return { ok: true, method: "smtp" };
-    } catch (error) {
-      failures.push(`smtp:${error.message}`);
-      logger.error(`SMTP send error: ${error.message}`);
+    let smtpErr = null;
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        await sendViaSMTP(to, subject, text);
+        logger.info(`Email sent successfully to ${to} via SMTP (attempt ${attempt})`);
+        return { ok: true, method: "smtp", attempt };
+      } catch (error) {
+        smtpErr = error;
+        logger.error(`SMTP send error (attempt ${attempt}): ${error.message}`);
+        if (attempt < 3) await sleep(8000);
+      }
     }
+    failures.push(`smtp:${smtpErr.message}`);
   }
 
   if (process.env.BREVO_API_KEY) {
