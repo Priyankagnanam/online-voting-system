@@ -1,196 +1,48 @@
 const nodemailer = require("nodemailer");
 const dns = require("dns");
-const net = require("net");
-const logger = require("../utils/logger");
 
-// Prefer IPv4 for outbound SMTP: providers like Render/Vercel often have no IPv6
-// route, and smtp.gmail.com resolves to IPv6 first, causing ENETUNREACH.
+// Prefer IPv4 for outbound SMTP: providers like Render/Vercel often have no
+// IPv6 route, which causes ENETUNREACH on hosts that resolve to IPv6 first.
 dns.setDefaultResultOrder("ipv4first");
 
-// nodemailer resolves hostnames itself (A + AAAA) and may pick an unroutable IPv6
-// address (or a blackholed A record), so pin to explicit IPv4 addresses and try them all.
-const getHostInfo = async () => {
-  const host = (process.env.SMTP_HOST || "smtp.gmail.com").trim();
-  if (net.isIP(host) !== 0) {
-    return { servername: undefined, addresses: [host] };
-  }
-  const seen = new Set();
-  try {
-    // Google rotates A records per query; gather as many distinct servers as possible
-    for (let i = 0; i < 8; i += 1) {
-      const addresses = await dns.promises.resolve4(host);
-      for (const a of addresses) seen.add(a);
-    }
-  } catch (err) {
-    logger.error(`DNS resolve4 failed for ${host}: ${err.message}`);
-  }
-  const addresses = [...seen].slice(0, 8);
-  if (addresses.length > 0) {
-    return { servername: host, addresses };
-  }
-  return { servername: undefined, addresses: [host] };
-};
+// Transport is strictly configured from environment variables:
+//   SMTP_HOST       e.g. smtp-relay.brevo.com
+//   SMTP_PORT       e.g. 587
+//   SMTP_SECURE     'true'/'false' (must be 'false' for port 587)
+//   SMTP_USER       Brevo SMTP login
+//   SMTP_PASSWORD   Brevo SMTP key
+const getTransporter = () => {
+  const host = (process.env.SMTP_HOST || "").trim();
+  const port = Number(process.env.SMTP_PORT);
+  const secure = process.env.SMTP_SECURE === "true";
+  const user = (process.env.SMTP_USER || "").trim();
+  const pass = (process.env.SMTP_PASSWORD || "").trim();
 
-const getTransporter = (port, secure, hostInfo) => {
-  const smtpUser = (process.env.SMTP_USER || process.env.ADMIN_EMAIL || "").trim();
-  const smtpPass = (process.env.SMTP_PASSWORD || "").trim();
-  return hostInfo.addresses.map((address) => {
-    const transportOpts = {
-      host: address,
-      port,
-      secure,
-      connectionTimeout: 8000,
-      greetingTimeout: 8000,
-      socketTimeout: 15000,
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-    };
-    if (hostInfo.servername) {
-      transportOpts.servername = hostInfo.servername;
-    }
-    return nodemailer.createTransport(transportOpts);
-  });
-};
-
-const sendViaSMTP = async (to, subject, text) => {
-  const from = (process.env.SMTP_USER || process.env.ADMIN_EMAIL || "gpriyanka17052006@gmail.com").trim();
-  const configuredPort = parseInt((process.env.SMTP_PORT || "465").trim(), 10) || 465;
-  const configuredSecure = (process.env.SMTP_SECURE || "true").trim() === "true";
-
-  const ports = [[configuredPort, configuredSecure]];
-  if (!(configuredPort === 587 && !configuredSecure)) {
-    ports.push([587, false]);
+  if (!host || !Number.isInteger(port) || port <= 0) {
+    throw new Error("SMTP configuration missing: SMTP_HOST and SMTP_PORT are required");
+  }
+  if (!user || !pass) {
+    throw new Error("SMTP authentication missing: SMTP_USER and SMTP_PASSWORD are required");
   }
 
-  const hostInfo = await getHostInfo();
-  const attempts = [];
-  for (const address of hostInfo.addresses) {
-    for (const [port, secure] of ports) {
-      attempts.push([address, port, secure]);
-    }
-  }
-
-  let lastErr;
-  for (const [address, port, secure] of attempts) {
-    const [transporter] = getTransporter(port, secure, { ...hostInfo, addresses: [address] });
-    try {
-      await transporter.sendMail({ from, to, subject, text });
-      return;
-    } catch (err) {
-      lastErr = err;
-      logger.error(`SMTP attempt failed (${address}:${port} secure=${secure}): ${err.message}`);
-    }
-  }
-  throw lastErr;
-};
-
-const sendViaBrevo = async (to, subject, text) => {
-  const brevoApiKey = process.env.BREVO_API_KEY;
-  if (!brevoApiKey) throw new Error("BREVO_API_KEY is not configured");
-  const senderEmail = process.env.ADMIN_EMAIL || "gpriyanka17052006@gmail.com";
-  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
-    method: "POST",
-    headers: {
-      accept: "application/json",
-      "api-key": brevoApiKey,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      sender: { name: "Online Voting System", email: senderEmail },
-      to: [{ email: to }],
-      subject,
-      textContent: text,
-    }),
-  });
-  if (!response.ok) {
-    throw new Error(`Brevo API error: ${response.status} ${response.statusText}`);
-  }
-};
-
-// Brevo SMTP relay on port 2525 (Render blocks egress on 465/587 but 2525 is open)
-const sendViaBrevoSmtp = async (to, subject, text) => {
-  const brevoApiKey = process.env.BREVO_API_KEY;
-  if (!brevoApiKey) throw new Error("BREVO_API_KEY is not configured");
-  const smtpLogin = process.env.BREVO_SMTP_USER || brevoApiKey;
-  const senderEmail = process.env.ADMIN_EMAIL || "gpriyanka17052006@gmail.com";
-  const transporter = nodemailer.createTransport({
-    host: "smtp-relay.brevo.com",
-    port: 2525,
-    secure: false,
-    connectionTimeout: 15000,
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    auth: { user, pass },
+    connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 20000,
-    auth: {
-      user: smtpLogin,
-      pass: brevoApiKey,
-    },
   });
-  await transporter.sendMail({ from: senderEmail, to, subject, text });
 };
-
-const logEmailContents = (details, text) => {
-  logger.info("--------------------------------------------------");
-  logger.info("EMAIL DELIVERY FAILED - contents:");
-  logger.info(`  To:      ${details.to}`);
-  logger.info(`  Subject: ${details.subject}`);
-  logger.info("  Body:");
-  logger.info(text);
-  logger.info("--------------------------------------------------");
-};
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const sendEmail = async (to, subject, text) => {
-  const details = { to, subject };
-  const failures = [];
+  const from = (process.env.SMTP_FROM || "").trim();
+  if (!from) throw new Error("SMTP_FROM is not configured");
+  if (!to) throw new Error("Recipient email is missing");
 
-  if (process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
-    let smtpErr = null;
-    for (let attempt = 1; attempt <= 3; attempt += 1) {
-      try {
-        await sendViaSMTP(to, subject, text);
-        logger.info(`Email sent successfully to ${to} via SMTP (attempt ${attempt})`);
-        return { ok: true, method: "smtp", attempt };
-      } catch (error) {
-        smtpErr = error;
-        logger.error(`SMTP send error (attempt ${attempt}): ${error.message}`);
-        if (attempt < 3) await sleep(8000);
-      }
-    }
-    failures.push(`smtp:${smtpErr.message}`);
-  }
-
-  if (process.env.BREVO_API_KEY) {
-    try {
-      await sendViaBrevo(to, subject, text);
-      logger.info(`Email sent successfully to ${to} via Brevo API`);
-      return { ok: true, method: "brevo" };
-    } catch (error) {
-      failures.push(`brevo-api:${error.message}`);
-      logger.error(`Brevo API send error: ${error.message}`);
-    }
-  }
-
-  if (process.env.BREVO_API_KEY) {
-    try {
-      await sendViaBrevoSmtp(to, subject, text);
-      logger.info(`Email sent successfully to ${to} via Brevo SMTP relay`);
-      return { ok: true, method: "brevo-smtp" };
-    } catch (error) {
-      failures.push(`brevo-smtp:${error.message}`);
-      logger.error(`Brevo SMTP relay send error: ${error.message}`);
-    }
-  }
-
-  logEmailContents(details, text);
-  const firstError = failures[0] || "";
-  return {
-    ok: false,
-    method: failures.length ? firstError.split(":")[0] : "unconfigured",
-    error: failures.join(" | ") || "No email provider configured",
-  };
+  const transporter = getTransporter();
+  await transporter.sendMail({ from, to, subject, text });
 };
 
 const sendOTP = async (email, otp, purpose) => {
@@ -205,10 +57,18 @@ const sendOTP = async (email, otp, purpose) => {
       : `Your password reset OTP is: ${otp}\n\nThis OTP expires in 10 minutes.\nDo not share this code with anyone.`;
 
   if ((process.env.OTP_DEV_MODE || "").toLowerCase() === "true") {
-    logger.info(`[DEV] OTP for ${email} (${purpose}): ${otp}`);
+    console.log(`[DEV] OTP for ${email} (${purpose}): ${otp}`);
   }
 
-  return sendEmail(email, subject, text);
+  console.log(`[OTP] Attempting to send email to ${email}`);
+  try {
+    await sendEmail(email, subject, text);
+    console.log("[OTP] Email sent successfully");
+    return { ok: true, method: "smtp" };
+  } catch (err) {
+    console.error(`[OTP] Email sending failed: ${err.message}`);
+    throw err;
+  }
 };
 
 module.exports = { sendEmail, sendOTP };
