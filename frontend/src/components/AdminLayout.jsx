@@ -8,7 +8,7 @@ import {
   BarChart3,
   ShieldAlert,
   LogOut,
-  Landmark,
+  ShieldCheck,
   UserCog,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -36,11 +36,11 @@ const AdminLayout = ({ children }) => {
     <div className="admin-layout">
       <aside className="admin-sidebar">
         <div className="brand">
-          <Landmark size={22} />
+          <ShieldCheck size={22} />
           <span>
-            Online Voting System
+            VoteSecure
             <em style={{ display: "block", fontStyle: "normal", fontSize: "0.72rem", fontWeight: 600, color: "rgba(255,255,255,0.45)" }}>
-              Administration Panel
+              Online Voting System
             </em>
           </span>
         </div>
