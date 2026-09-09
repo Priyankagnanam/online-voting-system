@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ShieldAlert, ChevronLeft, ChevronRight } from "lucide-react";
 import api from "../../services/api";
 import Loading from "../../components/Loading";
 import ErrorMessage from "../../components/ErrorMessage";
@@ -27,10 +28,10 @@ const SecurityAlerts = () => {
     }
   };
 
-  const getRiskColor = (level) => {
-    if (level === "suspicious") return "var(--danger)";
-    if (level === "review") return "var(--warning)";
-    return "var(--success)";
+  const getRiskBadge = (level) => {
+    if (level === "suspicious") return "badge-danger";
+    if (level === "review") return "badge-warning";
+    return "badge-success";
   };
 
   if (loading && alerts.length === 0) return <Loading message="Loading security alerts..." />;
@@ -38,83 +39,84 @@ const SecurityAlerts = () => {
 
   return (
     <div className="page">
-      <h2>Security Alerts</h2>
-      <p style={{ marginBottom: "1rem", color: "var(--text-secondary)" }}>
-        AI-assisted/rule-based suspicious login detection. Not a production-grade intrusion-detection system.
-      </p>
+      <div className="page-header">
+        <div>
+          <h2>Security Alerts</h2>
+          <p className="page-subtitle">
+            AI-assisted / rule-based suspicious login detection. Not a production-grade
+            intrusion-detection system.
+          </p>
+        </div>
+        <span className="chip">
+          <ShieldAlert size={14} /> {alerts.length} on this page
+        </span>
+      </div>
 
       {alerts.length === 0 ? (
         <div className="card">
-          <p>No suspicious activity detected.</p>
+          <div className="empty-state">
+            <span className="empty-state-icon"><ShieldAlert size={24} /></span>
+            <h3>No suspicious activity</h3>
+            <p>No suspicious login attempts have been detected.</p>
+          </div>
         </div>
       ) : (
         <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>Status</th>
-                <th>Risk Score</th>
-                <th>Risk Level</th>
-                <th>IP</th>
-                <th>Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {alerts.map((alert) => (
-                <tr key={alert._id}>
-                  <td>{alert.email}</td>
-                  <td>{alert.success ? "Success" : "Failed"}</td>
-                  <td>
-                    <strong style={{ color: getRiskColor(alert.riskLevel) }}>
-                      {alert.riskScore}
-                    </strong>
-                  </td>
-                  <td>
-                    <span
-                      className="badge"
-                      style={{
-                        background:
-                          alert.riskLevel === "suspicious"
-                            ? "#fef2f2"
-                            : alert.riskLevel === "review"
-                            ? "#fffbeb"
-                            : "#f0fdf4",
-                        color: getRiskColor(alert.riskLevel),
-                      }}
-                    >
-                      {alert.riskLevel}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: "0.85rem" }}>{alert.ip}</td>
-                  <td style={{ fontSize: "0.85rem" }}>
-                    {new Date(alert.timestamp).toLocaleString()}
-                  </td>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th>Risk Score</th>
+                  <th>Risk Level</th>
+                  <th>IP</th>
+                  <th>Time</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {alerts.map((alert) => (
+                  <tr key={alert._id}>
+                    <td style={{ fontWeight: 600 }}>{alert.email}</td>
+                    <td>
+                      <span className={`badge ${alert.success ? "badge-active" : "badge-danger"}`}>
+                        {alert.success ? "Success" : "Failed"}
+                      </span>
+                    </td>
+                    <td>
+                      <strong style={{ fontFeatureSettings: "'tnum'" }}>{alert.riskScore}</strong>
+                    </td>
+                    <td>
+                      <span className={`badge ${getRiskBadge(alert.riskLevel)}`}>
+                        {alert.riskLevel}
+                      </span>
+                    </td>
+                    <td className="table-muted">{alert.ip}</td>
+                    <td className="table-muted">{new Date(alert.timestamp).toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {totalPages > 1 && (
-        <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem", justifyContent: "center" }}>
+        <div className="pagination">
           <button
-            className="btn btn-secondary"
+            className="btn btn-secondary btn-sm"
             disabled={page === 1}
             onClick={() => setPage(page - 1)}
           >
-            Previous
+            <ChevronLeft size={15} /> Previous
           </button>
-          <span style={{ padding: "0.5rem" }}>
-            Page {page} of {totalPages}
-          </span>
+          <span className="pagination-info">Page {page} of {totalPages}</span>
           <button
-            className="btn btn-secondary"
+            className="btn btn-secondary btn-sm"
             disabled={page === totalPages}
             onClick={() => setPage(page + 1)}
           >
-            Next
+            Next <ChevronRight size={15} />
           </button>
         </div>
       )}

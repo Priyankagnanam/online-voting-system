@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Mail } from "lucide-react";
 import api from "../services/api";
 import ErrorMessage from "../components/ErrorMessage";
 import AuthLayout from "../components/AuthLayout";
@@ -46,6 +47,7 @@ const ForgotPassword = () => {
           />
         </div>
         <button className="btn btn-primary btn-block" disabled={loading}>
+          <Mail size={17} />
           {loading ? "Sending..." : "Send OTP"}
         </button>
       </form>

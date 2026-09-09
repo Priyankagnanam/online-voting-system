@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { io } from "socket.io-client";
+import { BarChart3, Trophy, Inbox } from "lucide-react";
 import api from "../../services/api";
 import Loading from "../../components/Loading";
 import ErrorMessage from "../../components/ErrorMessage";
@@ -45,44 +46,61 @@ const Results = () => {
 
   return (
     <div className="page">
-      <h2>Election Results</h2>
+      <div className="page-header">
+        <div>
+          <h2>Election Results</h2>
+          <p className="page-subtitle">Live vote counts and candidate statistics.</p>
+        </div>
+        <span className="chip">
+          <BarChart3 size={14} /> Live
+        </span>
+      </div>
 
       {results.length === 0 ? (
-        <div className="card"><p>No elections found.</p></div>
+        <div className="card">
+          <div className="empty-state">
+            <span className="empty-state-icon"><Inbox size={24} /></span>
+            <h3>No elections found</h3>
+            <p>Results will appear here once elections are created.</p>
+          </div>
+        </div>
       ) : (
         results.map((result) => (
-          <div key={result.election._id} className="card" style={{ marginBottom: "1.5rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+          <div key={result.election._id} className="card result-card">
+            <div className="result-header">
               <h3>{result.election.title}</h3>
               <span className={`badge badge-${result.election.status}`}>{result.election.status}</span>
             </div>
-            <p style={{ color: "var(--text-secondary)", marginBottom: "1rem" }}>
-              Total votes: {result.totalVotes}
-            </p>
+            <p className="result-total">Total votes: {result.totalVotes}</p>
             {result.candidates.length > 0 ? (
               <div>
                 {result.candidates.map((candidate, index) => {
                   const percentage = result.totalVotes > 0
                     ? ((candidate.voteCount / result.totalVotes) * 100).toFixed(1)
                     : 0;
+                  const isWinner = index === 0 && result.totalVotes > 0;
                   return (
-                    <div key={candidate.id} style={{ marginBottom: "0.75rem" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.25rem" }}>
+                    <div key={candidate.id} className="result-row">
+                      <div className="result-row-head">
                         <span>
-                          {index === 0 && result.totalVotes > 0 && (
-                            <span style={{ color: "var(--warning)", marginRight: "0.3rem" }}>&#9733;</span>
+                          {isWinner && (
+                            <span className="result-winner">
+                              <Trophy size={15} />
+                            </span>
                           )}
-                          <strong>{candidate.name}</strong> ({candidate.party})
+                          <strong>{candidate.name}</strong>
+                          <span className="table-muted"> ({candidate.party})</span>
                         </span>
-                        <span>{candidate.voteCount} votes ({percentage}%)</span>
+                        <span className="result-count">
+                          {candidate.voteCount} votes ({percentage}%)
+                        </span>
                       </div>
-                      <div style={{ background: "var(--border)", borderRadius: "4px", height: "8px", overflow: "hidden" }}>
+                      <div className="result-bar">
                         <div
+                          className="result-bar-fill"
                           style={{
-                            background: index === 0 ? "var(--primary)" : "var(--text-secondary)",
-                            height: "100%",
+                            background: index === 0 ? "var(--primary)" : "var(--text-muted)",
                             width: `${percentage}%`,
-                            transition: "width 0.3s",
                           }}
                         />
                       </div>

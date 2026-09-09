@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import {
+  UserCheck,
+  Vote,
+  Clock,
+  CheckCircle,
+  Users,
+  ArrowRight,
+  ShieldCheck,
+} from "lucide-react";
 import api from "../services/api";
 import Loading from "../components/Loading";
 import ErrorMessage from "../components/ErrorMessage";
@@ -57,78 +66,136 @@ const ElectionDetails = () => {
   if (error) return <ErrorMessage message={error} />;
   if (!election) return <ErrorMessage message="Election not found" />;
 
+  const isSelectable = !hasVoted && election.status === "active";
+
   return (
     <div className="page">
-      <h2>{election.title}</h2>
-      {election.description && <p>{election.description}</p>}
+      <div className="election-head">
+        <h2>
+          {election.title}
+          <span className={`badge badge-${election.status}`}>{election.status}</span>
+        </h2>
+        {election.description && <p className="page-subtitle">{election.description}</p>}
+      </div>
 
-      <div className="card" style={{ marginBottom: "1.5rem" }}>
-        <div className="stats-grid">
-          <div className="stat-card">
-            <h3>{candidates.length}</h3>
-            <p>Candidates</p>
+      <div className="info-grid">
+        <div className="info-card">
+          <span className="stat-icon stat-icon-info"><Users size={19} /></span>
+          <div>
+            <div className="info-card-value">{candidates.length}</div>
+            <div className="info-card-label">Candidates</div>
           </div>
-          <div className="stat-card">
-            <h3>{voteCount}</h3>
-            <p>Votes Cast</p>
+        </div>
+        <div className="info-card">
+          <span className="stat-icon stat-icon-primary"><Vote size={19} /></span>
+          <div>
+            <div className="info-card-value">{voteCount}</div>
+            <div className="info-card-label">Votes Cast</div>
           </div>
-          <div className="stat-card">
-            <h3>
-              <span className={`badge badge-${election.status}`}>{election.status}</span>
-            </h3>
-            <p>Status</p>
+        </div>
+        <div className="info-card">
+          <span className="stat-icon stat-icon-success"><CheckCircle size={19} /></span>
+          <div>
+            <div className="info-card-value">
+              <span className="badge badge-active">Status</span>
+            </div>
+            <div className="info-card-label" style={{ textTransform: "capitalize" }}>{election.status}</div>
+          </div>
+        </div>
+        <div className="info-card">
+          <span className="stat-icon stat-icon-warning"><Clock size={19} /></span>
+          <div>
+            <div className="info-card-value" style={{ fontSize: "0.92rem" }}>
+              {new Date(election.endDate).toLocaleDateString()}
+            </div>
+            <div className="info-card-label">Ends</div>
           </div>
         </div>
       </div>
 
       {hasVoted && (
         <div className="success-message">
-          You have already voted in this election.
+          <CheckCircle size={17} />
+          <span>You have already voted in this election.</span>
         </div>
       )}
 
-      <h3>Candidates</h3>
-      <div className="candidate-list">
-        {candidates.map((candidate) => (
-          <div
-            key={candidate._id}
-            className={`card candidate-card ${selectedCandidate?._id === candidate._id ? "selected" : ""}`}
-            onClick={() => {
-              if (!hasVoted && election.status === "active") {
-                setSelectedCandidate(candidate);
-              }
-            }}
-            style={{
-              cursor: hasVoted || election.status !== "active" ? "default" : "pointer",
-              border:
-                selectedCandidate?._id === candidate._id
-                  ? "2px solid var(--primary)"
-                  : "1px solid var(--border)",
-            }}
-          >
-            <h3>{candidate.name}</h3>
-            <p style={{ color: "var(--primary)", fontWeight: 500 }}>{candidate.party}</p>
-            {candidate.description && <p>{candidate.description}</p>}
+      <div className="section">
+        <h3 className="section-title">
+          <UserCheck size={18} /> Candidates
+        </h3>
+        {candidates.length === 0 ? (
+          <div className="card">
+            <div className="empty-state">
+              <span className="empty-state-icon"><Users size={24} /></span>
+              <h3>No candidates yet</h3>
+              <p>No candidates have been added to this election yet.</p>
+            </div>
           </div>
-        ))}
+        ) : (
+          <div className="candidate-list">
+            {candidates.map((candidate) => {
+              const selected = selectedCandidate?._id === candidate._id;
+              return (
+                <div
+                  key={candidate._id}
+                  className={`card candidate-card ${selected ? "selected" : ""} ${!isSelectable ? "candidate-disabled" : ""}`}
+                  onClick={() => {
+                    if (isSelectable) {
+                      setSelectedCandidate(candidate);
+                    }
+                  }}
+                  role={isSelectable ? "button" : undefined}
+                  tabIndex={isSelectable ? 0 : undefined}
+                  onKeyDown={(e) => {
+                    if (isSelectable && (e.key === "Enter" || e.key === " ")) {
+                      e.preventDefault();
+                      setSelectedCandidate(candidate);
+                    }
+                  }}
+                >
+                  <span className="candidate-radio">&#10003;</span>
+                  <div className="candidate-card-top">
+                    <span className="candidate-avatar">
+                      {candidate.name?.charAt(0).toUpperCase() || "?"}
+                    </span>
+                    <div>
+                      <p className="candidate-name">{candidate.name}</p>
+                      <p className="candidate-party">{candidate.party}</p>
+                    </div>
+                  </div>
+                  {candidate.description && (
+                    <p className="candidate-desc">{candidate.description}</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {candidates.length === 0 && (
-        <div className="card">
-          <p>No candidates have been added to this election yet.</p>
-        </div>
-      )}
-
       {!hasVoted && election.status === "active" && selectedCandidate && (
-        <div style={{ marginTop: "1.5rem", textAlign: "center" }}>
-          <p>You selected: <strong>{selectedCandidate.name}</strong> ({selectedCandidate.party})</p>
-          <button
-            className="btn btn-primary"
-            onClick={() => setShowModal(true)}
-            style={{ marginTop: "0.5rem" }}
-          >
-            Cast Vote
-          </button>
+        <div className="vote-review">
+          <div className="vote-review-info">
+            <span className="stat-icon stat-icon-primary">
+              <ShieldCheck size={19} />
+            </span>
+            <div className="vote-review-text">
+              <strong>You selected: {selectedCandidate.name}</strong>
+              <span>{selectedCandidate.party}</span>
+            </div>
+          </div>
+          <div className="vote-review-actions">
+            <button
+              className="btn btn-secondary"
+              onClick={() => setSelectedCandidate(null)}
+            >
+              Change
+            </button>
+            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+              Cast Vote <ArrowRight size={16} />
+            </button>
+          </div>
         </div>
       )}
 

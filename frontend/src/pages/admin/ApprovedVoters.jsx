@@ -1,4 +1,14 @@
 import { useState, useEffect } from "react";
+import {
+  UserPlus,
+  Upload,
+  Trash2,
+  Search,
+  ClipboardCheck,
+  ChevronLeft,
+  ChevronRight,
+  Inbox,
+} from "lucide-react";
 import api from "../../services/api";
 import Loading from "../../components/Loading";
 import ErrorMessage from "../../components/ErrorMessage";
@@ -137,20 +147,27 @@ const ApprovedVoters = () => {
 
   return (
     <div className="page">
-      <h2>Voter Eligibility List</h2>
-      <p style={{ color: "var(--text-secondary)", marginBottom: "1.5rem" }}>
-        Only pre-approved voters with an active Voter ID Number on this list are eligible to register and cast a vote.
-      </p>
+      <div className="page-header">
+        <div>
+          <h2>Voter Eligibility List</h2>
+          <p className="page-subtitle">
+            Only pre-approved voters with an active Voter ID Number on this list are eligible
+            to register and cast a vote.
+          </p>
+        </div>
+        <span className="chip">
+          <ClipboardCheck size={14} /> {total} eligible
+        </span>
+      </div>
 
       {error && <ErrorMessage message={error} />}
       {success && <div className="success-message">{success}</div>}
 
-      <div className="grid" style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "2rem" }}>
-        {/* Left Column: Add Voters */}
-        <div>
-          <div className="card" style={{ marginBottom: "1.5rem" }}>
+      <div className="grid-2">
+        <div className="stack">
+          <div className="card">
             <h3>Add Single Eligible Voter</h3>
-            <form onSubmit={handleSingleAdd} style={{ marginTop: "1rem" }}>
+            <form onSubmit={handleSingleAdd} className="inline-form">
               <div className="form-group">
                 <label>Voter ID Number *</label>
                 <input
@@ -184,10 +201,10 @@ const ApprovedVoters = () => {
 
               <button
                 type="submit"
-                className="btn btn-primary"
-                style={{ width: "100%", marginTop: "0.5rem" }}
+                className="btn btn-primary btn-block"
                 disabled={processing}
               >
+                <UserPlus size={16} />
                 {processing ? "Saving..." : "Add Eligible Voter"}
               </button>
             </form>
@@ -195,17 +212,16 @@ const ApprovedVoters = () => {
 
           <div className="card">
             <h3>Bulk Add / CSV Import</h3>
-            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.75rem" }}>
+            <p className="field-hint">
               Format per line: <code>VoterID, FullName, RegisteredEmail</code>
             </p>
-            <form onSubmit={handleBulkAdd}>
+            <form onSubmit={handleBulkAdd} className="inline-form">
               <div className="form-group">
                 <textarea
                   rows="5"
                   value={bulkInput}
                   onChange={(e) => setBulkInput(e.target.value)}
-                  placeholder="VOT-2024-001, Alice Smith, alice@example.com&#10;VOT-2024-002, Bob Jones, bob@example.com"
-                  style={{ width: "100%", padding: "0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--text-primary)" }}
+                  placeholder={"VOT-2024-001, Alice Smith, alice@example.com\nVOT-2024-002, Bob Jones, bob@example.com"}
                 />
               </div>
 
@@ -215,111 +231,130 @@ const ApprovedVoters = () => {
                   type="file"
                   accept=".csv,.txt"
                   onChange={handleFileUpload}
-                  style={{ width: "100%" }}
                 />
               </div>
 
               <button
                 type="submit"
-                className="btn btn-secondary"
-                style={{ width: "100%", marginTop: "0.5rem" }}
+                className="btn btn-secondary btn-block"
                 disabled={processing}
               >
+                <Upload size={16} />
                 {processing ? "Saving..." : "Import Bulk List"}
               </button>
             </form>
           </div>
         </div>
 
-        {/* Right Column: List & Search */}
         <div>
           <div className="card">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <h3>Eligible Voters ({total})</h3>
-              <input
-                type="text"
-                placeholder="Search Voter ID / Name / Email..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
-                style={{ padding: "0.4rem 0.8rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--text-primary)" }}
-              />
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "0.75rem",
+                flexWrap: "wrap",
+                marginBottom: "1rem",
+              }}
+            >
+              <h3 style={{ marginBottom: 0 }}>Eligible Voters ({total})</h3>
+              <div className="search-input">
+                <Search size={16} />
+                <input
+                  type="text"
+                  placeholder="Search Voter ID / Name / Email..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                  }}
+                />
+              </div>
             </div>
 
             {loading && voters.length === 0 ? (
               <Loading message="Loading list..." />
             ) : voters.length === 0 ? (
-              <p style={{ textAlign: "center", color: "var(--text-secondary)" }}>
-                {search ? "No matches found." : "Pre-approval list is currently empty."}
-              </p>
+              <div className="empty-state">
+                <span className="empty-state-icon"><Inbox size={24} /></span>
+                <h3>{search ? "No matches found" : "List is empty"}</h3>
+                <p>
+                  {search
+                    ? "Try a different search term."
+                    : "Add voters to the pre-approval list to make them eligible."}
+                </p>
+              </div>
             ) : (
               <div>
-                <table className="table" style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr style={{ borderBottom: "2px solid var(--border)" }}>
-                      <th style={{ textAlign: "left", padding: "0.5rem" }}>Voter ID</th>
-                      <th style={{ textAlign: "left", padding: "0.5rem" }}>Name / Email</th>
-                      <th style={{ textAlign: "center", padding: "0.5rem" }}>Status</th>
-                      <th style={{ textAlign: "right", padding: "0.5rem" }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {voters.map((voter) => (
-                      <tr key={voter._id} style={{ borderBottom: "1px solid var(--border)" }}>
-                        <td style={{ padding: "0.5rem", fontWeight: "bold" }}>{voter.rollNumber}</td>
-                        <td style={{ padding: "0.5rem", fontSize: "0.9rem" }}>
-                          <div>{voter.name || "N/A"}</div>
-                          <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>{voter.email || "No email linked"}</div>
-                        </td>
-                        <td style={{ textAlign: "center", padding: "0.5rem" }}>
-                          <span
-                            className="badge"
-                            style={{
-                              cursor: "pointer",
-                              background: voter.isEligible ? "#f0fdf4" : "#fef2f2",
-                              color: voter.isEligible ? "var(--success)" : "var(--danger)",
-                            }}
-                            onClick={() => handleToggleEligibility(voter._id)}
-                            title="Click to toggle eligibility"
-                          >
-                            {voter.isEligible ? "Eligible" : "Ineligible"}
-                          </span>
-                        </td>
-                        <td style={{ textAlign: "right", padding: "0.5rem" }}>
-                          <button
-                            onClick={() => handleDeleteVoter(voter._id)}
-                            className="btn btn-danger"
-                            style={{ padding: "0.2rem 0.5rem", fontSize: "0.8rem" }}
-                          >
-                            Remove
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div className="table-container">
+                  <div className="table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Voter ID</th>
+                          <th>Name / Email</th>
+                          <th className="text-center">Status</th>
+                          <th className="text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {voters.map((voter) => (
+                          <tr key={voter._id}>
+                            <td>
+                              <span style={{ fontWeight: 700 }}>{voter.rollNumber}</span>
+                            </td>
+                            <td>
+                              <div style={{ fontWeight: 600 }}>{voter.name || "N/A"}</div>
+                              <div className="table-muted" style={{ fontSize: "0.8rem" }}>
+                                {voter.email || "No email linked"}
+                              </div>
+                            </td>
+                            <td className="text-center">
+                              <span
+                                className={`badge ${voter.isEligible ? "badge-success" : "badge-danger"}`}
+                                style={{ cursor: "pointer" }}
+                                onClick={() => handleToggleEligibility(voter._id)}
+                                title="Click to toggle eligibility"
+                              >
+                                {voter.isEligible ? "Eligible" : "Ineligible"}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="table-actions">
+                                <button
+                                  onClick={() => handleDeleteVoter(voter._id)}
+                                  className="btn btn-danger btn-sm"
+                                >
+                                  <Trash2 size={14} /> Remove
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
 
-                {/* Pagination */}
                 {totalPages > 1 && (
-                  <div style={{ display: "flex", justifyContent: "center", gap: "0.5rem", marginTop: "1rem" }}>
+                  <div className="pagination">
                     <button
-                      className="btn"
+                      className="btn btn-secondary btn-sm"
                       disabled={page === 1}
                       onClick={() => setPage(page - 1)}
                     >
-                      Prev
+                      <ChevronLeft size={15} /> Prev
                     </button>
-                    <span style={{ alignSelf: "center" }}>
+                    <span className="pagination-info">
                       Page {page} of {totalPages}
                     </span>
                     <button
-                      className="btn"
+                      className="btn btn-secondary btn-sm"
                       disabled={page === totalPages}
                       onClick={() => setPage(page + 1)}
                     >
-                      Next
+                      Next <ChevronRight size={15} />
                     </button>
                   </div>
                 )}

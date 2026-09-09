@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Plus, Pencil, Trash2, UserPlus, Inbox, X } from "lucide-react";
 import api from "../../services/api";
 import Loading from "../../components/Loading";
 import ErrorMessage from "../../components/ErrorMessage";
@@ -84,21 +85,25 @@ const CandidateManagement = () => {
 
   return (
     <div className="page">
-      <h2>Candidate Management</h2>
+      <div className="page-header">
+        <div>
+          <h2>Candidate Management</h2>
+          <p className="page-subtitle">{candidates.length} candidate(s) across all elections.</p>
+        </div>
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            setShowForm(!showForm);
+            setEditingId(null);
+            setForm({ name: "", party: "", description: "", electionId: "" });
+          }}
+        >
+          {showForm ? <><X size={16} /> Cancel</> : <><Plus size={16} /> Add Candidate</>}
+        </button>
+      </div>
+
       <ErrorMessage message={error} />
       {success && <div className="success-message">{success}</div>}
-
-      <button
-        className="btn btn-primary"
-        onClick={() => {
-          setShowForm(!showForm);
-          setEditingId(null);
-          setForm({ name: "", party: "", description: "", electionId: "" });
-        }}
-        style={{ marginBottom: "1rem" }}
-      >
-        {showForm ? "Cancel" : "+ Add Candidate"}
-      </button>
 
       {showForm && (
         <div className="card" style={{ marginBottom: "1.5rem" }}>
@@ -111,6 +116,7 @@ const CandidateManagement = () => {
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 required
+                placeholder="Candidate full name"
               />
             </div>
             <div className="form-group">
@@ -146,6 +152,7 @@ const CandidateManagement = () => {
               </select>
             </div>
             <button className="btn btn-primary" type="submit">
+              <UserPlus size={16} />
               {editingId ? "Update" : "Add"}
             </button>
           </form>
@@ -153,32 +160,53 @@ const CandidateManagement = () => {
       )}
 
       {candidates.length === 0 ? (
-        <div className="card"><p>No candidates yet.</p></div>
+        <div className="card">
+          <div className="empty-state">
+            <span className="empty-state-icon"><Inbox size={24} /></span>
+            <h3>No candidates yet</h3>
+            <p>Add candidates to your elections to get started.</p>
+          </div>
+        </div>
       ) : (
         <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Party</th>
-                <th>Election</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {candidates.map((candidate) => (
-                <tr key={candidate._id}>
-                  <td>{candidate.name}</td>
-                  <td>{candidate.party}</td>
-                  <td>{candidate.electionId?.title || "N/A"}</td>
-                  <td>
-                    <button className="btn btn-secondary" style={{ fontSize: "0.8rem", padding: "0.3rem 0.6rem", marginRight: "0.3rem" }} onClick={() => handleEdit(candidate)}>Edit</button>
-                    <button className="btn btn-danger" style={{ fontSize: "0.8rem", padding: "0.3rem 0.6rem" }} onClick={() => handleDelete(candidate._id)}>Delete</button>
-                  </td>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Party</th>
+                  <th>Election</th>
+                  <th className="text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {candidates.map((candidate) => (
+                  <tr key={candidate._id}>
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                        <span className="candidate-avatar" style={{ width: 34, height: 34, fontSize: "0.95rem" }}>
+                          {candidate.name?.charAt(0).toUpperCase() || "?"}
+                        </span>
+                        <span style={{ fontWeight: 600 }}>{candidate.name}</span>
+                      </div>
+                    </td>
+                    <td>{candidate.party}</td>
+                    <td className="table-muted">{candidate.electionId?.title || "N/A"}</td>
+                    <td>
+                      <div className="table-actions">
+                        <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(candidate)}>
+                          <Pencil size={14} /> Edit
+                        </button>
+                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(candidate._id)}>
+                          <Trash2 size={14} /> Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

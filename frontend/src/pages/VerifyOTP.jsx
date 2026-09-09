@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { ShieldCheck, RefreshCw } from "lucide-react";
 import api from "../services/api";
 import ErrorMessage from "../components/ErrorMessage";
 import AuthLayout from "../components/AuthLayout";
@@ -80,9 +81,11 @@ const VerifyOTP = () => {
             required
             maxLength={6}
             placeholder="123456"
+            inputMode="numeric"
           />
         </div>
         <button className="btn btn-primary btn-block" disabled={loading}>
+          <ShieldCheck size={17} />
           {loading ? "Verifying..." : "Verify"}
         </button>
         <button
@@ -92,6 +95,7 @@ const VerifyOTP = () => {
           onClick={handleResend}
           disabled={resending}
         >
+          <RefreshCw size={15} className={resending ? "loading-spin" : ""} />
           {resending ? "Sending..." : "Resend OTP"}
         </button>
       </form>

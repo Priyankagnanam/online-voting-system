@@ -3,6 +3,7 @@ import { AuthProvider } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
+import AdminLayout from "./components/AdminLayout";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 import Home from "./pages/Home";
@@ -56,25 +57,25 @@ function App() {
 
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin/dashboard" element={
-                  <AdminRoute><AdminDashboard /></AdminRoute>
+                  <AdminRoute><AdminLayout><AdminDashboard /></AdminLayout></AdminRoute>
                 } />
                 <Route path="/admin/elections" element={
-                  <AdminRoute><ElectionManagement /></AdminRoute>
+                  <AdminRoute><AdminLayout><ElectionManagement /></AdminLayout></AdminRoute>
                 } />
                 <Route path="/admin/candidates" element={
-                  <AdminRoute><CandidateManagement /></AdminRoute>
+                  <AdminRoute><AdminLayout><CandidateManagement /></AdminLayout></AdminRoute>
                 } />
                 <Route path="/admin/voters" element={
-                  <AdminRoute><VoterManagement /></AdminRoute>
+                  <AdminRoute><AdminLayout><VoterManagement /></AdminLayout></AdminRoute>
                 } />
                 <Route path="/admin/results" element={
-                  <AdminRoute><Results /></AdminRoute>
+                  <AdminRoute><AdminLayout><Results /></AdminLayout></AdminRoute>
                 } />
                 <Route path="/admin/security-alerts" element={
-                  <AdminRoute><SecurityAlerts /></AdminRoute>
+                  <AdminRoute><AdminLayout><SecurityAlerts /></AdminLayout></AdminRoute>
                 } />
                 <Route path="/admin/approved-voters" element={
-                  <AdminRoute><ApprovedVoters /></AdminRoute>
+                  <AdminRoute><AdminLayout><ApprovedVoters /></AdminLayout></AdminRoute>
                 } />
 
                 <Route path="*" element={<NotFound />} />

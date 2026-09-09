@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Landmark, Menu, LogIn, UserPlus, ShieldCheck, LogOut, LayoutDashboard, Globe } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
@@ -18,39 +19,65 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="navbar-brand">
-        <Link to="/" onClick={closeMenu}>Online Voting System</Link>
-        {user && (
-          <button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)}>
-            &#9776;
-          </button>
-        )}
+        <span className="navbar-brand-icon">
+          <Landmark size={18} />
+        </span>
+        <Link to="/" className="navbar-brand-link" onClick={closeMenu}>
+          Online Voting System
+        </Link>
+        <button
+          className="menu-toggle"
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Toggle navigation menu"
+        >
+          <Menu size={20} />
+        </button>
       </div>
+
       <div className={`navbar-links ${menuOpen ? "open" : ""}`}>
         {!user && (
           <>
-            <Link to="/login" onClick={closeMenu}>Login</Link>
-            <Link to="/register" onClick={closeMenu}>Register</Link>
-            <Link to="/admin/login" onClick={closeMenu}>Admin</Link>
+            <NavLink to="/login" onClick={closeMenu}>
+              <LogIn size={16} /> Login
+            </NavLink>
+            <NavLink to="/register" onClick={closeMenu}>
+              <UserPlus size={16} /> Register
+            </NavLink>
+            <NavLink to="/admin/login" onClick={closeMenu}>
+              <ShieldCheck size={16} /> Admin
+            </NavLink>
           </>
         )}
         {user && user.role === "voter" && (
           <>
-            <span className="navbar-user">Hi, {user.name}</span>
-            <Link to="/dashboard" onClick={closeMenu}>Dashboard</Link>
-            <button onClick={handleLogout}>Logout</button>
+            <span className="navbar-user">
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>Hi, {user.name}</span>
+            </span>
+            <NavLink to="/dashboard" onClick={closeMenu}>
+              <LayoutDashboard size={16} /> Dashboard
+            </NavLink>
+            <button className="navbar-button" onClick={handleLogout}>
+              <LogOut size={16} /> Logout
+            </button>
           </>
         )}
         {user && user.role === "admin" && (
           <>
-            <span className="navbar-user">Admin</span>
-            <Link to="/admin/dashboard" onClick={closeMenu}>Dashboard</Link>
-            <Link to="/admin/elections" onClick={closeMenu}>Elections</Link>
-            <Link to="/admin/candidates" onClick={closeMenu}>Candidates</Link>
-            <Link to="/admin/voters" onClick={closeMenu}>Voters</Link>
-            <Link to="/admin/approved-voters" onClick={closeMenu}>Approved List</Link>
-            <Link to="/admin/results" onClick={closeMenu}>Results</Link>
-            <Link to="/admin/security-alerts" onClick={closeMenu}>Alerts</Link>
-            <button onClick={handleLogout}>Logout</button>
+            <span className="navbar-user">
+              <ShieldCheck size={15} />
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                {user.name || "Administrator"}
+              </span>
+            </span>
+            <NavLink to="/admin/dashboard" onClick={closeMenu}>
+              <LayoutDashboard size={16} /> Dashboard
+            </NavLink>
+            <Link to="/" onClick={closeMenu}>
+              <Globe size={16} /> View Site
+            </Link>
+            <button className="navbar-button" onClick={handleLogout}>
+              <LogOut size={16} /> Logout
+            </button>
           </>
         )}
       </div>

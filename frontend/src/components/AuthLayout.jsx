@@ -1,3 +1,5 @@
+import { Landmark, CheckCircle2 } from "lucide-react";
+
 const AuthLayout = ({ title, subtitle, children, bullets }) => {
   const features =
     bullets || [
@@ -9,7 +11,9 @@ const AuthLayout = ({ title, subtitle, children, bullets }) => {
   return (
     <div className="auth-shell">
       <div className="auth-brand">
-        <div className="auth-brand-logo">OV</div>
+        <span className="auth-brand-logo">
+          <Landmark size={26} />
+        </span>
         <h1>Online Voting System</h1>
         <p>
           Conduct trusted, transparent and secure elections for communities,
@@ -17,7 +21,10 @@ const AuthLayout = ({ title, subtitle, children, bullets }) => {
         </p>
         <ul>
           {features.map((feature, i) => (
-            <li key={i}>{feature}</li>
+            <li key={i}>
+              <CheckCircle2 size={17} />
+              {feature}
+            </li>
           ))}
         </ul>
       </div>

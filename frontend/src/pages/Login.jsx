@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { LogIn, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import ErrorMessage from "../components/ErrorMessage";
@@ -8,6 +9,7 @@ import AuthLayout from "../components/AuthLayout";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [showVerify, setShowVerify] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -52,18 +54,32 @@ const Login = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            autoComplete="email"
+            placeholder="you@example.com"
           />
         </div>
         <div className="form-group">
           <label>Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <div className="password-wrap">
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+            </button>
+          </div>
         </div>
         <button className="btn btn-primary btn-block" disabled={loading}>
+          <LogIn size={17} />
           {loading ? "Logging in..." : "Login"}
         </button>
       </form>

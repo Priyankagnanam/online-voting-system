@@ -1,4 +1,5 @@
-import { Component } from 'react';
+import { Component } from "react";
+import { AlertTriangle } from "lucide-react";
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -11,57 +12,28 @@ class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
   }
 
   handleReload = () => {
     this.setState({ hasError: false, error: null });
-    window.location.href = '/';
+    window.location.href = "/";
   };
 
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh',
-          padding: '2rem',
-          textAlign: 'center',
-          background: '#f9fafb',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        }}>
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '3rem',
-            maxWidth: '500px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          }}>
-            <h1 style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>⚠️</h1>
-            <h2 style={{ color: '#111827', marginBottom: '1rem' }}>Something went wrong</h2>
-            <p style={{ color: '#6b7280', marginBottom: '2rem', lineHeight: '1.6' }}>
+        <div className="auth-shell" style={{ minHeight: "100vh", alignItems: "center" }}>
+          <div className="success-card card" style={{ maxWidth: "540px", margin: "0 auto" }}>
+            <span className="success-check" style={{ background: "var(--danger-soft)", color: "var(--danger)" }}>
+              <AlertTriangle size={34} />
+            </span>
+            <h2>Something went wrong</h2>
+            <p>
               An unexpected error occurred. Please try reloading the page.
               If the problem persists, please contact support.
             </p>
-            <button
-              onClick={this.handleReload}
-              style={{
-                background: '#4f46e5',
-                color: 'white',
-                border: 'none',
-                padding: '0.75rem 2rem',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                cursor: 'pointer',
-                transition: 'background 0.2s',
-              }}
-              onMouseOver={(e) => e.target.style.background = '#4338ca'}
-              onMouseOut={(e) => e.target.style.background = '#4f46e5'}
-              aria-label="Reload application"
-            >
+            <button className="btn btn-primary" onClick={this.handleReload} aria-label="Reload application">
               Reload Application
             </button>
           </div>

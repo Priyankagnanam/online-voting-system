@@ -1,5 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import {
+  Users,
+  CalendarClock,
+  UserCheck,
+  Vote,
+  Play,
+  ClipboardCheck,
+  ShieldAlert,
+  ArrowRight,
+  LayoutDashboard,
+} from "lucide-react";
 import api from "../../services/api";
 import Loading from "../../components/Loading";
 import ErrorMessage from "../../components/ErrorMessage";
@@ -27,68 +38,99 @@ const AdminDashboard = () => {
   if (loading) return <Loading message="Loading dashboard..." />;
   if (error) return <ErrorMessage message={error} />;
 
+  const quickActions = [
+    { to: "/admin/elections", icon: CalendarClock, label: "Elections", desc: "Manage elections" },
+    { to: "/admin/candidates", icon: UserCheck, label: "Candidates", desc: "Manage candidates" },
+    { to: "/admin/voters", icon: Users, label: "Voters", desc: "Manage voters" },
+    { to: "/admin/approved-voters", icon: ClipboardCheck, label: "Eligibility List", desc: "Pre-approved voters" },
+    { to: "/admin/results", icon: Vote, label: "Results", desc: "View results" },
+  ];
+
   return (
     <div className="dashboard">
-      <h2>Admin Dashboard</h2>
-
-      <div className="stats-grid">
-        <div className="stat-card">
-          <h3>{stats.totalVoters}</h3>
-          <p>Total Voters</p>
-        </div>
-        <div className="stat-card">
-          <h3>{stats.totalElections}</h3>
-          <p>Total Elections</p>
-        </div>
-        <div className="stat-card">
-          <h3>{stats.totalCandidates}</h3>
-          <p>Total Candidates</p>
-        </div>
-        <div className="stat-card">
-          <h3>{stats.totalVotes}</h3>
-          <p>Total Votes</p>
-        </div>
-        <div className="stat-card">
-          <h3>{stats.activeElections}</h3>
-          <p>Active Elections</p>
-        </div>
-        <div className="stat-card">
-          <h3>{stats.totalApprovedVoters || 0}</h3>
-          <p>Approved Voters</p>
+      <div className="page-header">
+        <div>
+          <h2>Admin Dashboard</h2>
+          <p className="page-subtitle">Overview of your election platform.</p>
         </div>
       </div>
 
-      <h3>Quick Actions</h3>
       <div className="stats-grid">
-        <Link to="/admin/elections" className="stat-card" style={{ textDecoration: "none" }}>
-          <h3>Elections</h3>
-          <p>Manage elections</p>
-        </Link>
-        <Link to="/admin/candidates" className="stat-card" style={{ textDecoration: "none" }}>
-          <h3>Candidates</h3>
-          <p>Manage candidates</p>
-        </Link>
-        <Link to="/admin/voters" className="stat-card" style={{ textDecoration: "none" }}>
-          <h3>Voters</h3>
-          <p>Manage voters</p>
-        </Link>
-        <Link to="/admin/approved-voters" className="stat-card" style={{ textDecoration: "none" }}>
-          <h3>Pre-Approval</h3>
-          <p>Manage approved list</p>
-        </Link>
-        <Link to="/admin/results" className="stat-card" style={{ textDecoration: "none" }}>
-          <h3>Results</h3>
-          <p>View results</p>
-        </Link>
+        <div className="stat-card">
+          <span className="stat-icon stat-icon-primary"><Users size={19} /></span>
+          <div className="stat-inner">
+            <div className="stat-value">{stats.totalVoters}</div>
+            <div className="stat-label">Total Voters</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <span className="stat-icon stat-icon-info"><CalendarClock size={19} /></span>
+          <div className="stat-inner">
+            <div className="stat-value">{stats.totalElections}</div>
+            <div className="stat-label">Total Elections</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <span className="stat-icon stat-icon-warning"><UserCheck size={19} /></span>
+          <div className="stat-inner">
+            <div className="stat-value">{stats.totalCandidates}</div>
+            <div className="stat-label">Total Candidates</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <span className="stat-icon stat-icon-success"><Vote size={19} /></span>
+          <div className="stat-inner">
+            <div className="stat-value">{stats.totalVotes}</div>
+            <div className="stat-label">Total Votes</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <span className="stat-icon stat-icon-danger"><Play size={19} /></span>
+          <div className="stat-inner">
+            <div className="stat-value">{stats.activeElections}</div>
+            <div className="stat-label">Active Elections</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <span className="stat-icon stat-icon-muted"><ClipboardCheck size={19} /></span>
+          <div className="stat-inner">
+            <div className="stat-value">{stats.totalApprovedVoters || 0}</div>
+            <div className="stat-label">Approved Voters</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="section">
+        <h3 className="section-title">
+          <LayoutDashboard size={18} /> Quick Actions
+        </h3>
+        <div className="stats-grid">
+          {quickActions.map(({ to, icon: Icon, label, desc }) => (
+            <Link key={to} to={to} className="stat-card stat-card-link">
+              <span className="stat-icon stat-icon-primary"><Icon size={19} /></span>
+              <div className="stat-inner">
+                <div className="stat-value" style={{ fontSize: "1.05rem" }}>{label}</div>
+                <div className="stat-label">{desc}</div>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
 
       {stats.security.suspiciousCount > 0 && (
-        <div className="card" style={{ marginTop: "1.5rem" }}>
-          <h3 style={{ color: "var(--danger)" }}>Security Alert</h3>
-          <p>{stats.security.suspiciousCount} suspicious login attempts detected.</p>
-          <Link to="/admin/security-alerts" className="btn btn-danger" style={{ marginTop: "0.5rem", display: "inline-block", textDecoration: "none" }}>
-            View Alerts
-          </Link>
+        <div className="card" style={{ borderColor: "#fecaca", background: "var(--danger-soft)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.9rem", flexWrap: "wrap" }}>
+            <span className="stat-icon stat-icon-danger"><ShieldAlert size={20} /></span>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <h3 style={{ color: "var(--danger)", marginBottom: 0 }}>Security Alert</h3>
+              <p style={{ marginBottom: 0, color: "var(--danger)" }}>
+                {stats.security.suspiciousCount} suspicious login attempt(s) detected.
+              </p>
+            </div>
+            <Link to="/admin/security-alerts" className="btn btn-danger">
+              View Alerts <ArrowRight size={16} />
+            </Link>
+          </div>
         </div>
       )}
     </div>

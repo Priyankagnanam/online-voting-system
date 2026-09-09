@@ -1,11 +1,24 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { io } from "socket.io-client";
+import {
+  Play,
+  CalendarClock,
+  CheckCircle,
+  UserCheck,
+  Vote,
+  Clock,
+  ArrowRight,
+  LayoutDashboard,
+  Inbox,
+} from "lucide-react";
 import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
 import Loading from "../components/Loading";
 import ErrorMessage from "../components/ErrorMessage";
 
 const VoterDashboard = () => {
+  const { user } = useAuth();
   const [elections, setElections] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -59,54 +72,75 @@ const VoterDashboard = () => {
 
   return (
     <div className="dashboard">
-      <h2>Voter Dashboard</h2>
+      <div className="dashboard-header">
+        <div className="dashboard-title">
+          <span className="hero-mark" style={{ width: 48, height: 48, borderRadius: 14, marginBottom: 0 }}>
+            <LayoutDashboard size={22} />
+          </span>
+          <div>
+            <h2>{user?.name ? `Welcome, ${user.name.split(" ")[0]}` : "Voter Dashboard"}</h2>
+            <p>Your elections and voting overview.</p>
+          </div>
+        </div>
+      </div>
 
       {stats && (
         <div className="stats-grid">
           <div className="stat-card">
-            <h3>{stats.activeElections}</h3>
-            <p>Active Elections</p>
+            <span className="stat-icon stat-icon-primary"><Play size={19} /></span>
+            <div className="stat-inner">
+              <div className="stat-value">{stats.activeElections}</div>
+              <div className="stat-label">Active Elections</div>
+            </div>
           </div>
           <div className="stat-card">
-            <h3>{stats.totalElections}</h3>
-            <p>Total Elections</p>
+            <span className="stat-icon stat-icon-info"><CalendarClock size={19} /></span>
+            <div className="stat-inner">
+              <div className="stat-value">{stats.totalElections}</div>
+              <div className="stat-label">Total Elections</div>
+            </div>
           </div>
           <div className="stat-card">
-            <h3>{stats.votedElections}</h3>
-            <p>Votes Cast</p>
+            <span className="stat-icon stat-icon-success"><CheckCircle size={19} /></span>
+            <div className="stat-inner">
+              <div className="stat-value">{stats.votedElections}</div>
+              <div className="stat-label">Votes Cast</div>
+            </div>
           </div>
         </div>
       )}
 
-      <h3>Active Elections</h3>
-      {elections.length === 0 ? (
-        <div className="card">
-          <p>No active elections at the moment. Check back later.</p>
-        </div>
-      ) : (
-        <div className="election-list">
-          {elections.map((election) => (
-            <div key={election._id} className="card election-card">
-              <h3>{election.title}</h3>
-              {election.description && <p>{election.description}</p>}
-              <div className="election-meta">
-                <span>{election.candidateCount} candidates</span>
-                <span>{election.voteCount} votes cast</span>
-              </div>
-              <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-                Ends: {new Date(election.endDate).toLocaleDateString()}
-              </p>
-              <Link
-                to={`/elections/${election._id}`}
-                className="btn btn-primary"
-                style={{ marginTop: "0.75rem", display: "inline-block", textDecoration: "none" }}
-              >
-                View & Vote
-              </Link>
+      <div className="section">
+        <h3 className="section-title">
+          <Play size={18} /> Active Elections
+        </h3>
+        {elections.length === 0 ? (
+          <div className="card">
+            <div className="empty-state">
+              <span className="empty-state-icon"><Inbox size={24} /></span>
+              <h3>No active elections</h3>
+              <p>There are no active elections at the moment. Check back later.</p>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        ) : (
+          <div className="election-list">
+            {elections.map((election) => (
+              <div key={election._id} className="card election-card">
+                <h3>{election.title}</h3>
+                {election.description && <p>{election.description}</p>}
+                <div className="election-meta">
+                  <span><UserCheck size={15} /> {election.candidateCount} candidates</span>
+                  <span><Vote size={15} /> {election.voteCount} votes cast</span>
+                  <span><Clock size={15} /> Ends {new Date(election.endDate).toLocaleDateString()}</span>
+                </div>
+                <Link to={`/elections/${election._id}`} className="btn btn-primary">
+                  View &amp; Vote <ArrowRight size={16} />
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

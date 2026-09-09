@@ -1,17 +1,26 @@
 import { Link } from "react-router-dom";
+import { CheckCircle2, LayoutDashboard, Home } from "lucide-react";
 
 const VoteConfirmation = () => {
   return (
-    <div className="page" style={{ textAlign: "center", padding: "4rem 2rem" }}>
-      <div className="card" style={{ maxWidth: "500px", margin: "0 auto" }}>
-        <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>&#10003;</div>
+    <div className="page text-center" style={{ padding: "4rem 2rem" }}>
+      <div className="success-card card">
+        <span className="success-check">
+          <CheckCircle2 size={38} />
+        </span>
         <h2>Vote Confirmed!</h2>
-        <p style={{ marginBottom: "1.5rem" }}>
-          Your vote has been recorded successfully. Thank you for participating!
+        <p>
+          Your vote has been recorded successfully.
+          Thank you for participating in this election.
         </p>
-        <Link to="/dashboard" className="btn btn-primary">
-          Back to Dashboard
-        </Link>
+        <div className="vote-review-actions" style={{ justifyContent: "center" }}>
+          <Link to="/dashboard" className="btn btn-primary">
+            <LayoutDashboard size={17} /> Back to Dashboard
+          </Link>
+          <Link to="/" className="btn btn-secondary">
+            <Home size={17} /> Home
+          </Link>
+        </div>
       </div>
     </div>
   );
