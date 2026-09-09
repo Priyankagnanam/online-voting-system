@@ -133,6 +133,13 @@ const login = async (req, res) => {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
+    const isMatch = await user.comparePassword(password);
+    logger.info("Password check", { attemptedEmail: cleanEmail, isMatch });
+    if (!isMatch) {
+      await recordLoginAttempt(cleanEmail, false, ip, userAgent);
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
     if (!user.isVerified) {
       await recordLoginAttempt(cleanEmail, false, ip, userAgent);
       return res.status(403).json({ error: "Please verify your email first." });
@@ -145,13 +152,6 @@ const login = async (req, res) => {
           ? "Your registration has not been approved."
           : "Your registration is awaiting admin approval.";
       return res.status(403).json({ error, approvalStatus: user.approvalStatus });
-    }
-
-    const isMatch = await user.comparePassword(password);
-    logger.info("Password check", { attemptedEmail: cleanEmail, isMatch });
-    if (!isMatch) {
-      await recordLoginAttempt(cleanEmail, false, ip, userAgent);
-      return res.status(401).json({ error: "Invalid email or password" });
     }
 
     const loginRecord = await recordLoginAttempt(email, true, ip, userAgent);

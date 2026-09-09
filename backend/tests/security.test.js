@@ -92,6 +92,21 @@ describe('Security', () => {
         .send({ name: 'C', electionId: '000000000000000000000000' });
       expect(res.status).toBe(403);
     });
+
+    it('wrong password returns 401 even for unverified/approved-unspecified accounts (no account enumeration)', async () => {
+      await User.create({
+        name: 'Raw Voter',
+        email: 'raw@test.com',
+        passwordHash: 'RawPass123',
+        role: 'voter',
+        isVerified: false,
+      });
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({ email: 'raw@test.com', password: 'wrongpassword' });
+      expect(res.status).toBe(401);
+      expect(res.body.error).toBe('Invalid email or password');
+    });
   });
 
   describe('Input Validation', () => {
