@@ -9,7 +9,6 @@ import {
   Vote,
   Clock,
   ArrowRight,
-  LayoutDashboard,
   Inbox,
   XCircle,
 } from "lucide-react";
@@ -80,13 +79,18 @@ const VoterDashboard = () => {
 
   if (needsApproval) {
     return (
-      <div className="page">
-        <div className="card" style={{ maxWidth: 560, margin: "3rem auto" }}>
-          <div className="empty-state">
+      <div className="page" style={{ maxWidth: 640, margin: "0 auto" }}>
+        <div className="card" style={{ marginTop: "2rem", padding: "2rem 1.75rem" }}>
+          <div className="empty-state" style={{ border: "none", background: "transparent", padding: 0 }}>
             <span className="empty-state-icon">
-              {approvalStatus === "REJECTED" ? <XCircle size={24} /> : <Clock size={24} />}
+              {approvalStatus === "REJECTED" ? <XCircle size={26} /> : <Clock size={26} />}
             </span>
-            <span className={`badge ${approvalStatus === "REJECTED" ? "badge-danger" : "badge-warning"} approval-badge`}>
+            <span
+              className={`badge ${
+                approvalStatus === "REJECTED" ? "badge-danger" : "badge-warning"
+              } approval-badge`}
+              style={{ marginBottom: "1rem" }}
+            >
               {approvalStatus}
             </span>
             <h3>
@@ -100,6 +104,25 @@ const VoterDashboard = () => {
                 : "Once an administrator approves your account, you will be able to log in and vote."}
             </p>
           </div>
+          <div className="approval-track">
+            <div className="track-step done">
+              <span className="step-dot">&#10003;</span>
+              <span className="step-label">Account Created</span>
+            </div>
+            <div className={`track-step ${approvalStatus === "REJECTED" ? "done" : "active"}`}>
+              <span className="step-dot">{approvalStatus === "REJECTED" ? "!" : "2"}</span>
+              <span className="step-label">
+                {approvalStatus === "REJECTED" ? "Not Approved" : "Admin Approval"}
+              </span>
+            </div>
+          </div>
+          {approvalStatus === "REJECTED" && (
+            <p className="text-center" style={{ marginTop: "1.25rem" }}>
+              <Link to="/" className="btn btn-primary">
+                Contact Administrator
+              </Link>
+            </p>
+          )}
         </div>
       </div>
     );
@@ -107,20 +130,24 @@ const VoterDashboard = () => {
 
   return (
     <div className="dashboard">
-      <div className="dashboard-header">
-        <div className="dashboard-title">
-          <span className="hero-mark" style={{ width: 48, height: 48, borderRadius: 14, marginBottom: 0 }}>
-            <LayoutDashboard size={22} />
+      <div className="voter-hero">
+        <div>
+          <span className="status-pill">
+            <span className="dot" />
+            Election season is live
           </span>
-          <div>
-            <h2>{user?.name ? `Welcome, ${user.name.split(" ")[0]}` : "Voter Dashboard"}</h2>
-            <p>Your elections and voting overview.</p>
-          </div>
+          <h2 style={{ marginTop: "0.9rem" }}>
+            {user?.name ? `Welcome, ${user.name.split(" ")[0]}!` : "Welcome!"}
+          </h2>
+          <p>
+            Below are the elections open for voting right now. Select one to review
+            candidates and cast your vote.
+          </p>
         </div>
       </div>
 
       {stats && (
-        <div className="stats-grid">
+        <div className="stats-grid" style={{ marginTop: 0 }}>
           <div className="stat-card">
             <span className="stat-icon stat-icon-primary"><Play size={19} /></span>
             <div className="stat-inner">

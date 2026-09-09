@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { UserPlus, Eye, EyeOff } from "lucide-react";
+import { UserPlus, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import api from "../services/api";
 import ErrorMessage from "../components/ErrorMessage";
 import AuthLayout from "../components/AuthLayout";
@@ -112,6 +112,10 @@ const Register = () => {
       </form>
       <p className="auth-footer">
         Already have an account? <Link to="/login">Login</Link>
+      </p>
+      <p className="info-message" style={{ marginTop: "1.1rem", marginBottom: 0, padding: "0.7rem 0.9rem" }}>
+        <ShieldCheck size={16} />
+        <span>After email verification, your account is reviewed by an administrator before voting is enabled.</span>
       </p>
     </AuthLayout>
   );

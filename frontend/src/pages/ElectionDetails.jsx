@@ -114,9 +114,15 @@ const ElectionDetails = () => {
       </div>
 
       {hasVoted && (
-        <div className="success-message">
-          <CheckCircle size={17} />
-          <span>You have already voted in this election.</span>
+        <div className="voted-banner">
+          <CheckCircle size={34} strokeWidth={1.75} />
+          <div>
+            <strong>You have already voted in this election.</strong>
+            <p>
+              Your vote has been recorded and kept confidential. You cannot vote again in
+              this election.
+            </p>
+          </div>
         </div>
       )}
 

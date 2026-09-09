@@ -35,10 +35,16 @@ const AdminLayout = ({ children }) => {
   return (
     <div className="admin-layout">
       <aside className="admin-sidebar">
-        <div className="admin-nav-heading">
-          <Landmark size={14} style={{ verticalAlign: "-2px", marginRight: 4 }} />
-          Admin Panel
+        <div className="brand">
+          <Landmark size={22} />
+          <span>
+            Online Voting System
+            <em style={{ display: "block", fontStyle: "normal", fontSize: "0.72rem", fontWeight: 600, color: "rgba(255,255,255,0.45)" }}>
+              Administration Panel
+            </em>
+          </span>
         </div>
+        <div className="admin-nav-heading">Manage</div>
         {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
