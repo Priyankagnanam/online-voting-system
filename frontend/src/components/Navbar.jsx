@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Landmark, Menu, LogIn, UserPlus, ShieldCheck, LogOut, LayoutDashboard, Globe } from "lucide-react";
+import { ShieldCheck, Menu, LogIn, UserPlus, LogOut, LayoutDashboard, Globe } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
@@ -20,10 +20,11 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="navbar-brand">
         <span className="navbar-brand-icon">
-          <Landmark size={18} />
+          <ShieldCheck size={18} />
         </span>
         <Link to="/" className="navbar-brand-link" onClick={closeMenu}>
-          Online Voting System
+          <span className="nb-title">VoteSecure</span>
+          <span className="nb-sub">Online Voting System</span>
         </Link>
         <button
           className="menu-toggle"

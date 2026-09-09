@@ -125,13 +125,25 @@
 
 .navbar-brand-link {
   display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
   color: #fff;
   text-decoration: none;
   font-weight: 700;
   font-size: 1.05rem;
   letter-spacing: -0.02em;
+}
+
+.nb-title {
+  font-weight: 800;
+}
+
+.nb-sub {
+  font-weight: 500;
+  font-size: 0.74rem;
+  color: #93a5c4;
+  letter-spacing: 0.01em;
 }
 
 .navbar-user {
@@ -978,39 +990,49 @@ td.clickable {
 
 .hero {
   position: relative;
-  max-width: 1200px;
+  max-width: 1120px;
   margin: 0 auto;
   min-height: calc(100vh - 68px);
   display: flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  justify-content: space-between;
-  gap: 3rem;
-  padding: 4.5rem 1.5rem 4rem;
-}
-
-.hero-content {
-  flex: 1;
-  min-width: 0;
-  max-width: 700px;
-  margin: 0 auto;
+  gap: 0;
   text-align: center;
+  padding: 4rem 1.5rem 3.5rem;
 }
 
-.hero > :not(.hero-art) {
+/* Glowing 3D-style shield containing a ballot box */
+.hero-shield {
   position: relative;
-  z-index: 1;
-}
-
-.hero-mark {
   display: grid;
   place-items: center;
-  width: 84px;
-  height: 84px;
-  margin: 0 auto 1.5rem;
-  border-radius: 24px;
+  width: 132px;
+  height: 132px;
+  margin: 0 auto 1.7rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 32%, rgba(59, 130, 246, 0.5), rgba(29, 78, 216, 0.16) 62%, transparent 100%);
   color: #fff;
-  background: linear-gradient(140deg, var(--accent) 0%, var(--primary) 55%, #17357f 100%);
-  box-shadow: 0 18px 46px -12px rgba(29, 78, 216, 0.7);
+  filter: drop-shadow(0 26px 52px rgba(29, 78, 216, 0.55));
+}
+
+.hero-shield svg {
+  filter: drop-shadow(0 6px 18px rgba(59, 130, 246, 0.6));
+}
+
+.hero-shield-badge {
+  position: absolute;
+  right: 2px;
+  bottom: 10px;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(140deg, #3b82f6 0%, #1d4ed8 100%);
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 12px 26px -6px rgba(37, 99, 235, 0.7);
 }
 
 .hero-badge {
@@ -1018,10 +1040,10 @@ td.clickable {
   align-items: center;
   gap: 0.45rem;
   padding: 0.35rem 0.9rem;
-  margin-bottom: 1.4rem;
+  margin-bottom: 1.35rem;
   border-radius: 999px;
-  background: rgba(59, 130, 246, 0.14);
-  border: 1px solid rgba(96, 165, 250, 0.35);
+  background: transparent;
+  border: 1px solid rgba(147, 197, 253, 0.4);
   color: #bfd9ff;
   font-size: 0.82rem;
   font-weight: 600;
@@ -1030,16 +1052,16 @@ td.clickable {
 
 .hero h1 {
   color: #fff;
-  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  font-size: clamp(2.3rem, 5.5vw, 3.7rem);
   font-weight: 800;
   letter-spacing: -0.03em;
-  line-height: 1.1;
-  max-width: 760px;
+  line-height: 1.08;
+  max-width: 780px;
   margin: 0 auto;
 }
 
 .hero h1 .accent {
-  background: linear-gradient(120deg, #7cb3ff, #bcd6ff);
+  background: linear-gradient(100deg, #3b82f6 0%, #60a5fa 55%, #93c5fd 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1048,9 +1070,9 @@ td.clickable {
 
 .hero-lead {
   max-width: 620px;
-  margin: 1.25rem auto 2rem;
+  margin: 1.25rem auto 2.1rem;
   color: #b7c6e0;
-  font-size: 1.08rem;
+  font-size: 1.05rem;
   line-height: 1.7;
 }
 
@@ -1060,168 +1082,55 @@ td.clickable {
   justify-content: center;
   gap: 0.75rem;
   flex-wrap: wrap;
-  margin-bottom: 3rem;
 }
 
-/* Subtle right-side election visual (from reference design) */
-.hero-art {
-  position: relative;
-  flex-shrink: 0;
-  width: clamp(280px, 30vw, 400px);
+/* 3-column features row */
+.feature-row {
   display: grid;
-  gap: 0.9rem;
-  opacity: 0.9;
-  pointer-events: none;
-  z-index: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.1rem;
+  width: 100%;
+  max-width: 920px;
+  margin: 3.25rem auto 0;
 }
 
-.ha-landmark {
-  display: grid;
-  place-items: center;
-  width: 118px;
-  height: 118px;
-  margin: 0 auto 0.4rem;
-  border-radius: 30px;
-  background: linear-gradient(145deg, rgba(59, 130, 246, 0.32), rgba(29, 78, 216, 0.12));
-  border: 1px solid rgba(147, 197, 253, 0.3);
-  color: #bfd9ff;
-  box-shadow: 0 30px 60px -22px rgba(29, 78, 216, 0.6);
-  backdrop-filter: blur(6px);
-}
-
-.ha-chip {
+.feature-item {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 0.62rem 0.95rem;
-  color: #c7d6f0;
-  font-size: 0.85rem;
-  font-weight: 600;
+  gap: 0.9rem;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.1rem;
   backdrop-filter: blur(4px);
 }
 
-.ha-chip svg {
+.fi-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.22);
   color: #8ab6ff;
   flex-shrink: 0;
 }
 
-.ha-bars {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 8px;
-  height: 46px;
-  margin-top: 0.2rem;
-}
-
-.ha-bars span {
-  width: 10px;
-  border-radius: 8px 8px 2px 2px;
-  background: linear-gradient(180deg, var(--accent), rgba(59, 130, 246, 0.08));
-}
-
-.ha-bars span:nth-child(1) {
-  height: 20px;
-}
-
-.ha-bars span:nth-child(2) {
-  height: 44px;
-}
-
-.ha-bars span:nth-child(3) {
-  height: 30px;
-}
-
-.ha-bars span:nth-child(4) {
-  height: 38px;
-}
-
-@media (max-width: 1080px) {
-  .hero-art {
-    display: none;
-  }
-}
-
-.trust-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.75rem;
-  flex-wrap: wrap;
-  opacity: 0.85;
-  padding-top: 2.25rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.trust-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  color: #c3d1e6;
-  font-size: 0.86rem;
-  font-weight: 600;
-}
-
-.trust-item svg {
-  color: #8ab6ff;
-}
-
-.features-grid {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 0 1.5rem 5rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.1rem;
-}
-
-.feature-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-lg);
-  padding: 1.4rem 1.3rem;
-  backdrop-filter: blur(8px);
-  transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
-}
-
-.feature-card:hover {
-  transform: translateY(-4px);
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(96, 165, 250, 0.35);
-}
-
-.feature-icon {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  margin-bottom: 0.9rem;
-  background: rgba(59, 130, 246, 0.18);
-  color: #8ab6ff;
-}
-
-.feature-card h3 {
+.feature-item b {
+  display: block;
   color: #fff;
-  font-size: 0.98rem;
-  margin-bottom: 0.3rem;
+  font-size: 0.97rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
-.feature-card p {
-  color: #aebdd8;
-  font-size: 0.89rem;
-  line-height: 1.6;
-}
-
-.home-actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+.feature-item small {
+  display: block;
+  color: #9fb1cd;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin-top: 0.15rem;
 }
 
 /* ---------------------------------------------------------------
@@ -2447,11 +2356,19 @@ td.clickable {
   .search-input {
     min-width: 100%;
   }
+
+  .feature-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 480px) {
-  .navbar-brand-link span {
-    font-size: 0.95rem;
+  .nb-title {
+    font-size: 0.98rem;
+  }
+
+  .nb-sub {
+    font-size: 0.68rem;
   }
 
   .navbar-user {
@@ -2494,9 +2411,19 @@ td.clickable {
     font-size: 1.95rem;
   }
 
-  .hero-mark,
-  .hero .hero-mark {
-    width: 68px;
-    height: 68px;
+  .hero-shield {
+    width: 104px;
+    height: 104px;
+  }
+
+  .hero-shield-badge {
+    width: 38px;
+    height: 38px;
+  }
+
+  .feature-row {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+    margin-top: 2.5rem;
   }
 }

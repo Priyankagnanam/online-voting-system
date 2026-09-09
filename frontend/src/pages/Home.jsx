@@ -1,35 +1,29 @@
 import { Link } from "react-router-dom";
 import {
-  Landmark,
   ShieldCheck,
-  UserCheck,
-  BarChart3,
-  Radar,
-  LogIn,
   UserPlus,
-  CheckCircle2,
+  LogIn,
+  ArrowRight,
+  Users,
+  Lock,
+  Vote,
 } from "lucide-react";
 
 const features = [
   {
     icon: ShieldCheck,
-    title: "Secure Voting",
-    text: "JWT authentication, encrypted passwords, and server-side vote validation.",
+    title: "Encrypted & Verified",
+    text: "Your data, our priority",
   },
   {
-    icon: UserCheck,
+    icon: Users,
     title: "One Vote Per Voter",
-    text: "Database-level enforcement ensures each voter can only vote once per election.",
+    text: "Fair and equal for all",
   },
   {
-    icon: BarChart3,
-    title: "Real-Time Results",
-    text: "View election results with live vote counts and candidate statistics.",
-  },
-  {
-    icon: Radar,
-    title: "Security Monitoring",
-    text: "Risk detection flags suspicious login attempts for admin review.",
+    icon: Lock,
+    title: "Transparent Results",
+    text: "Builds trust in democracy",
   },
 ];
 
@@ -37,76 +31,52 @@ const Home = () => {
   return (
     <div className="page home-page page-bg">
       <div className="hero">
-        <div className="hero-content">
-          <span className="hero-mark">
-            <Landmark size={32} />
+        <div className="hero-shield" aria-hidden="true">
+          <ShieldCheck size={70} strokeWidth={1.4} />
+          <span className="hero-shield-badge">
+            <Vote size={22} />
           </span>
-          <div className="hero-badge">
-            <CheckCircle2 size={14} />
-            Trusted &amp; Transparent
-          </div>
-          <h1>Online Voting System</h1>
-          <p className="hero-lead">
-            A secure and transparent platform for conducting elections.
-            Register, verify your identity, and cast your vote with confidence.
-          </p>
-
-          <div className="hero-cta">
-            <Link to="/register" className="btn btn-primary">
-              <UserPlus size={17} /> Register as Voter
-            </Link>
-            <Link to="/login" className="btn btn-outline">
-              <LogIn size={17} /> Voter Login
-            </Link>
-            <Link to="/admin/login" className="btn btn-ghost">
-              <ShieldCheck size={17} /> Admin Login
-            </Link>
-          </div>
-
-          <div className="trust-row">
-            <span className="trust-item">
-              <ShieldCheck size={16} /> Encrypted &amp; verified
-            </span>
-            <span className="trust-item">
-              <UserCheck size={16} /> One vote per voter
-            </span>
-            <span className="trust-item">
-              <BarChart3 size={16} /> Transparent results
-            </span>
-          </div>
         </div>
 
-        <div className="hero-art" aria-hidden="true">
-          <div className="ha-landmark">
-            <Landmark size={52} strokeWidth={1.4} />
-          </div>
-          <div className="ha-chip">
-            <CheckCircle2 size={18} />
-            One Voter, One Vote
-          </div>
-          <div className="ha-chip">
-            <BarChart3 size={18} />
-            Transparent Live Results
-          </div>
-          <div className="ha-bars">
-            <span />
-            <span />
-            <span />
-            <span />
-          </div>
+        <div className="hero-badge">
+          <ShieldCheck size={14} />
+          Secure • Transparent • Fair
         </div>
-      </div>
 
-      <div className="features-grid">
-        {features.map(({ icon: Icon, title, text }) => (
-          <div key={title} className="card feature-card">
-            <span className="feature-icon">
-              <Icon size={22} />
-            </span>
-            <h3>{title}</h3>
-            <p>{text}</p>
-          </div>
-        ))}
+        <h1>
+          Online <span className="accent">Voting System</span>
+        </h1>
+
+        <p className="hero-lead">
+          A secure and transparent platform for conducting elections. Register,
+          verify your identity, and cast your vote with confidence.
+        </p>
+
+        <div className="hero-cta">
+          <Link to="/register" className="btn btn-primary">
+            <UserPlus size={17} /> Register as Voter <ArrowRight size={16} />
+          </Link>
+          <Link to="/login" className="btn btn-outline">
+            <LogIn size={17} /> Voter Login <ArrowRight size={16} />
+          </Link>
+          <Link to="/admin/login" className="btn btn-ghost">
+            <ShieldCheck size={17} /> Admin Login <ArrowRight size={16} />
+          </Link>
+        </div>
+
+        <div className="feature-row">
+          {features.map(({ icon: Icon, title, text }) => (
+            <div key={title} className="feature-item">
+              <span className="fi-icon">
+                <Icon size={21} />
+              </span>
+              <span>
+                <b>{title}</b>
+                <small>{text}</small>
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
