@@ -311,14 +311,20 @@ const ApprovedVoters = () => {
                               </div>
                             </td>
                             <td className="text-center">
-                              <span
-                                className={`badge ${voter.isEligible ? "badge-success" : "badge-danger"}`}
-                                style={{ cursor: "pointer" }}
-                                onClick={() => handleToggleEligibility(voter._id)}
-                                title="Click to toggle eligibility"
-                              >
-                                {voter.isEligible ? "Eligible" : "Ineligible"}
-                              </span>
+                              {voter.votedElections && voter.votedElections.length > 0 ? (
+                                <span className="badge badge-info" title="This voter has already cast a vote">
+                                  Voted
+                                </span>
+                              ) : (
+                                <span
+                                  className={`badge ${voter.isEligible ? "badge-success" : "badge-danger"}`}
+                                  style={{ cursor: "pointer" }}
+                                  onClick={() => handleToggleEligibility(voter._id)}
+                                  title="Click to toggle eligibility"
+                                >
+                                  {voter.isEligible ? "Eligible" : "Ineligible"}
+                                </span>
+                              )}
                             </td>
                             <td>
                               <div className="table-actions">
