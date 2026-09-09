@@ -5,6 +5,7 @@ import {
   UserCheck,
   BarChart3,
   Radar,
+  Vote,
   LogIn,
   UserPlus,
   CheckCircle2,
@@ -37,6 +38,20 @@ const Home = () => {
   return (
     <div className="page home-page page-bg">
       <div className="hero">
+        <div className="hero-visual" aria-hidden="true">
+          <div className="hv-card hv-card-1">
+            <Landmark size={42} strokeWidth={1.5} />
+          </div>
+          <div className="hv-card hv-card-2">
+            <Vote size={26} strokeWidth={1.5} />
+          </div>
+          <div className="hv-bar">
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
+        </div>
         <span className="hero-mark">
           <Landmark size={32} />
         </span>
@@ -54,10 +69,10 @@ const Home = () => {
           <Link to="/register" className="btn btn-primary">
             <UserPlus size={17} /> Register as Voter
           </Link>
-          <Link to="/login" className="btn btn-secondary">
+          <Link to="/login" className="btn btn-outline">
             <LogIn size={17} /> Voter Login
           </Link>
-          <Link to="/admin/login" className="btn btn-outline">
+          <Link to="/admin/login" className="btn btn-ghost">
             <ShieldCheck size={17} /> Admin Login
           </Link>
         </div>

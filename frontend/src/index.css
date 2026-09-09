@@ -132,7 +132,7 @@ textarea {
 ::-webkit-scrollbar-thumb {
   background: var(--border-strong);
   border-radius: 999px;
-  border: 2px solid var(--bg);
+  border: 2px solid transparent;
 }
 
 ::-webkit-scrollbar-thumb:hover {

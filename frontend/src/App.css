@@ -25,6 +25,13 @@
   padding-top: 1.5rem;
 }
 
+/* Full-bleed dark sections (Home + Auth): no margin, no padding, no page gutters */
+.main-content:has(.page-bg) {
+  max-width: none;
+  padding: 0;
+  margin: 0;
+}
+
 .page,
 .dashboard {
   animation: page-in 0.35s ease both;
@@ -974,11 +981,19 @@ td.clickable {
   max-width: 1120px;
   margin: 0 auto;
   text-align: center;
-  padding: 6rem 1.5rem 3.5rem;
+  min-height: calc(100vh - 68px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4.5rem 1.5rem 4rem;
+}
+
+.hero > :not(.hero-visual) {
+  position: relative;
+  z-index: 1;
 }
 
 .hero-mark {
-  position: relative;
   display: grid;
   place-items: center;
   width: 84px;
@@ -988,25 +1003,6 @@ td.clickable {
   color: #fff;
   background: linear-gradient(140deg, var(--accent) 0%, var(--primary) 55%, #17357f 100%);
   box-shadow: 0 18px 46px -12px rgba(29, 78, 216, 0.7);
-}
-
-.hero-mark::after {
-  content: "";
-  position: absolute;
-  inset: -8px;
-  border-radius: 30px;
-  border: 1px solid rgba(120, 170, 255, 0.35);
-  animation: pulse-ring 3s ease-in-out infinite;
-}
-
-@keyframes pulse-ring {
-  0%,
-  100% {
-    opacity: 0.9;
-  }
-  50% {
-    opacity: 0.25;
-  }
 }
 
 .hero-badge {
@@ -1057,6 +1053,78 @@ td.clickable {
   gap: 0.75rem;
   flex-wrap: wrap;
   margin-bottom: 3rem;
+}
+
+/* Subtle electoral visual on the right side of the hero */
+.hero-visual {
+  position: absolute;
+  top: 50%;
+  right: 1.5rem;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hv-card {
+  display: grid;
+  place-items: center;
+  border-radius: 20px;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  color: #7cb3ff;
+  backdrop-filter: blur(4px);
+}
+
+.hv-card-1 {
+  width: 84px;
+  height: 84px;
+}
+
+.hv-card-2 {
+  width: 52px;
+  height: 52px;
+  margin-right: 18px;
+}
+
+.hv-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 46px;
+  margin-right: 30px;
+}
+
+.hv-bar span {
+  width: 9px;
+  border-radius: 6px 6px 2px 2px;
+  background: linear-gradient(180deg, var(--accent), transparent);
+}
+
+.hv-bar span:nth-child(1) {
+  height: 30px;
+}
+
+.hv-bar span:nth-child(2) {
+  height: 46px;
+}
+
+.hv-bar span:nth-child(3) {
+  height: 22px;
+}
+
+.hv-bar span:nth-child(4) {
+  height: 38px;
+}
+
+@media (max-width: 1080px) {
+  .hero-visual {
+    display: none;
+  }
 }
 
 .trust-row {
