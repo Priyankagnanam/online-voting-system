@@ -1,5 +1,10 @@
 const nodemailer = require("nodemailer");
+const dns = require("dns");
 const logger = require("../utils/logger");
+
+// Prefer IPv4 for outbound SMTP: providers like Render/Vercel often have no IPv6
+// route, and smtp.gmail.com resolves to IPv6 first, causing ENETUNREACH.
+dns.setDefaultResultOrder("ipv4first");
 
 const getTransporter = (port, secure) => {
   const smtpUser = (process.env.SMTP_USER || process.env.ADMIN_EMAIL || "").trim();
