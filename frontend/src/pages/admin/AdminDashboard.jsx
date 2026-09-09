@@ -6,7 +6,7 @@ import {
   UserCheck,
   Vote,
   Play,
-
+  ClipboardCheck,
   ShieldAlert,
   ArrowRight,
   LayoutDashboard,
