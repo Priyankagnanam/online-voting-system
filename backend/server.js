@@ -126,11 +126,22 @@ if (process.env.NODE_ENV !== 'test') {
               passwordHash,
               role: 'admin',
               isVerified: true,
+              approvalStatus: 'APPROVED',
             }
           },
           { upsert: true }
         );
         logger.info(`Admin user guaranteed seeded: ${email}`);
+      }
+
+      // Migration: existing voters keep working — mark all pre-existing users as APPROVED.
+      // (Newly registered voters default to PENDING and require admin approval.)
+      const migration = await User.updateMany(
+        { approvalStatus: { $exists: false } },
+        { $set: { approvalStatus: 'APPROVED' } }
+      );
+      if (migration.modifiedCount > 0) {
+        logger.info(`Approval migration: marked ${migration.modifiedCount} existing user(s) as APPROVED`);
       }
     } catch (err) {
       logger.error('Error auto-seeding admin user:', { error: err.message });

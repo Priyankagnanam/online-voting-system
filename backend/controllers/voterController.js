@@ -1,6 +1,8 @@
 const Election = require("../models/Election");
 const Candidate = require("../models/Candidate");
 const Vote = require("../models/Vote");
+const ApprovedVoter = require("../models/ApprovedVoter");
+const computeVoterIdHash = require("../utils/voterIdHash");
 const logger = require("../utils/logger");
 
 const getActiveElections = async (req, res) => {
@@ -44,8 +46,15 @@ const getVoterElectionDetails = async (req, res) => {
     const candidates = await Candidate.find({ electionId: election._id });
     const voteCount = await Vote.countDocuments({ electionId: election._id });
 
+    const approvedVoter = await ApprovedVoter.findOne({
+      $or: [
+        ...(req.user.rollNumber ? [{ rollNumber: req.user.rollNumber }] : []),
+        { email: req.user.email.toLowerCase() },
+      ],
+    });
+    const voterIdHash = computeVoterIdHash(req.user, election._id, approvedVoter);
     const hasVoted = await Vote.findOne({
-      voterId: req.user._id,
+      voterIdHash,
       electionId: election._id,
     });
 
@@ -65,7 +74,7 @@ const getVoterStats = async (req, res) => {
   try {
     const activeElections = await Election.countDocuments({ status: "active" });
     const totalElections = await Election.countDocuments();
-    const votedElections = await Vote.countDocuments({ voterId: req.user._id });
+    const votedElections = (req.user.votedElections || []).length;
 
     res.json({ activeElections, totalElections, votedElections });
   } catch (error) {

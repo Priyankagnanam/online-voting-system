@@ -11,6 +11,7 @@ import {
   ArrowRight,
   LayoutDashboard,
   Inbox,
+  XCircle,
 } from "lucide-react";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
@@ -61,7 +62,11 @@ const VoterDashboard = () => {
       setElections(electionsRes.data.elections);
       setStats(statsRes.data);
     } catch (err) {
-      setError(err.response?.data?.error || "Failed to load data");
+      if (err.response?.status === 403) {
+        setError(err.response?.data?.error || "Your account has not been approved.");
+      } else {
+        setError(err.response?.data?.error || "Failed to load data");
+      }
     } finally {
       setLoading(false);
     }
@@ -69,6 +74,36 @@ const VoterDashboard = () => {
 
   if (loading) return <Loading message="Loading elections..." />;
   if (error) return <ErrorMessage message={error} />;
+
+  const approvalStatus = user?.approvalStatus || "APPROVED";
+  const needsApproval = approvalStatus !== "APPROVED";
+
+  if (needsApproval) {
+    return (
+      <div className="page">
+        <div className="card" style={{ maxWidth: 560, margin: "3rem auto" }}>
+          <div className="empty-state">
+            <span className="empty-state-icon">
+              {approvalStatus === "REJECTED" ? <XCircle size={24} /> : <Clock size={24} />}
+            </span>
+            <span className={`badge ${approvalStatus === "REJECTED" ? "badge-danger" : "badge-warning"} approval-badge`}>
+              {approvalStatus}
+            </span>
+            <h3>
+              {approvalStatus === "REJECTED"
+                ? "Your registration has not been approved."
+                : "Your registration is awaiting admin approval."}
+            </h3>
+            <p>
+              {approvalStatus === "REJECTED"
+                ? "Your registration has not been approved for voting."
+                : "Once an administrator approves your account, you will be able to log in and vote."}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard">

@@ -23,6 +23,7 @@ describe('Voting Logic and Concurrency', () => {
       passwordHash: 'VoterPass123',
       role: 'voter',
       isVerified: true,
+      approvalStatus: 'APPROVED',
     });
     voterId = voter._id;
 

@@ -29,7 +29,7 @@ const VerifyOTP = () => {
 
     try {
       await api.post("/auth/verify-otp", { email, otp, purpose: "verification" });
-      setSuccess("Email verified! Redirecting to login...");
+      setSuccess("Email verified! You can log in after admin approval.");
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
       setError(err.response?.data?.error || "Verification failed");

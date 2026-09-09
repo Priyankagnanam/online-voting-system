@@ -34,6 +34,7 @@ describe('Security', () => {
         passwordHash: 'AdminPass123',
         role: 'admin',
         isVerified: true,
+        approvalStatus: 'APPROVED',
       });
       await User.create({
         name: 'Voter',
@@ -41,6 +42,7 @@ describe('Security', () => {
         passwordHash: 'VoterPass123',
         role: 'voter',
         isVerified: true,
+        approvalStatus: 'APPROVED',
       });
 
       const adminRes = await request(app)
@@ -100,6 +102,7 @@ describe('Security', () => {
         passwordHash: 'AdminPass123',
         role: 'admin',
         isVerified: true,
+        approvalStatus: 'APPROVED',
       });
       const loginRes = await request(app)
         .post('/api/auth/login')

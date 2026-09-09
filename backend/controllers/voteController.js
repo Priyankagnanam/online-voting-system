@@ -4,6 +4,7 @@ const Election = require('../models/Election');
 const Candidate = require('../models/Candidate');
 const User = require('../models/User');
 const logger = require('../utils/logger');
+const computeVoterIdHash = require('../utils/voterIdHash');
 
 const ApprovedVoter = require('../models/ApprovedVoter');
 
@@ -13,13 +14,28 @@ const castVote = async (req, res) => {
     const voterId = req.user._id;
     const user = req.user;
 
-    // 1. Verify election exists
+    // 1. Voter must be approved (server-side enforcement — never trusts client flags)
+    if (user.approvalStatus !== 'APPROVED') {
+      return res.status(403).json({
+        error: user.approvalStatus === 'REJECTED'
+          ? 'Your registration has not been approved.'
+          : 'Your registration is awaiting admin approval.',
+        approvalStatus: user.approvalStatus,
+      });
+    }
+
+    // 2. Voter must have completed OTP email verification before voting
+    if (!user.isVerified) {
+      return res.status(403).json({ error: 'Please verify your email first.' });
+    }
+
+    // 3. Verify election exists
     const election = await Election.findById(electionId);
     if (!election) {
       return res.status(404).json({ error: 'Election not found' });
     }
 
-    // 2. Verify election is active (both status AND date-based)
+    // 4. Verify election is active (both status AND date-based)
     const now = new Date();
     if (election.status !== 'active') {
       return res.status(400).json({ error: 'This election is not currently active' });
@@ -31,13 +47,18 @@ const castVote = async (req, res) => {
       return res.status(400).json({ error: 'This election has ended' });
     }
 
-    // 3. Verify candidate exists AND belongs to this election
+    // 5. Verify voter has not already voted in this election
+    if (user.votedElections && user.votedElections.some(id => id.toString() === electionId.toString())) {
+      return res.status(400).json({ error: 'You have already voted.' });
+    }
+
+    // 6. Verify candidate exists AND belongs to this election
     const candidate = await Candidate.findOne({ _id: candidateId, electionId });
     if (!candidate) {
       return res.status(400).json({ error: 'Invalid candidate for this election' });
     }
 
-    // 4. Pre-registered voter & eligibility check on backend
+    // 7. Pre-registered voter & eligibility check on backend (existing functionality preserved)
     const approvedCount = await ApprovedVoter.countDocuments();
     let approvedVoter = null;
     if (approvedCount > 0) {
@@ -55,31 +76,22 @@ const castVote = async (req, res) => {
       }
     }
 
-    // Check user votedElections
-    if (user.votedElections && user.votedElections.some(id => id.toString() === electionId.toString())) {
-      return res.status(400).json({ error: 'You have already voted.' });
-    }
+    // 8. Generate deterministic voterIdHash based on Roll Number / Student ID (or User ID fallback)
+    const voterIdHash = computeVoterIdHash(user, electionId, approvedVoter);
 
-    // 5. Generate deterministic voterIdHash based on Roll Number / Student ID (or User ID fallback)
-    const voterKey = user.rollNumber || (approvedVoter ? approvedVoter.rollNumber : voterId.toString());
-    const voterIdHash = crypto
-      .createHash('sha256')
-      .update(voterKey.toString().toUpperCase() + electionId.toString() + (process.env.JWT_SECRET || 'secret-salt'))
-      .digest('hex');
-
-    // Check if already voted (application-level check)
+    // 9. Check if already voted (application-level check)
     const existingVote = await Vote.findOne({ voterIdHash, electionId });
     if (existingVote) {
       return res.status(400).json({ error: 'You have already voted.' });
     }
 
-    // 6. Generate secure random receipt hash for vote audit/verifiability
+    // 10. Generate secure random receipt hash for vote audit/verifiability
     const receiptHash = crypto.randomBytes(16).toString('hex');
 
-    // 7. Cast vote atomically in DB
+    // 11. Cast vote atomically in DB (unique index on voterIdHash+electionId prevents races)
     const vote = await Vote.create({ voterIdHash, electionId, candidateId, receiptHash });
 
-    // 8. Atomically update voter's hasVoted / votedElections state across User and ApprovedVoter tables
+    // 12. Atomically update voter's votedElections state across User and ApprovedVoter tables
     await User.findByIdAndUpdate(voterId, {
       $addToSet: { votedElections: electionId },
     });

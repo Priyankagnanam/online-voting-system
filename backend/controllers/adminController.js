@@ -15,6 +15,9 @@ const getDashboardStats = async (req, res) => {
     const activeElections = await Election.countDocuments({ status: "active" });
     const security = await getSecurityStats();
     const totalApprovedVoters = await ApprovedVoter.countDocuments();
+    const pendingApprovals = await User.countDocuments({ role: "voter", approvalStatus: "PENDING" });
+    const approvedVoters = await User.countDocuments({ role: "voter", approvalStatus: "APPROVED" });
+    const rejectedVoters = await User.countDocuments({ role: "voter", approvalStatus: "REJECTED" });
 
     res.json({
       totalVoters,
@@ -24,6 +27,9 @@ const getDashboardStats = async (req, res) => {
       activeElections,
       security,
       totalApprovedVoters,
+      pendingApprovals,
+      approvedVoters,
+      rejectedVoters,
     });
   } catch (error) {
     logger.error("Get admin stats error", { error: error.message, requestId: req.id });
@@ -43,10 +49,25 @@ const getUsers = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
+    const electionIds = [...new Set(users.flatMap((u) => u.votedElections || []))];
+    const elections = await Election.find({ _id: { $in: electionIds } }).select("title status");
+    const electionTitles = new Map(elections.map((e) => [e._id.toString(), e.title]));
+
+    const enrichedUsers = users.map((u) => {
+      const userJson = u.toJSON();
+      const voted = u.votedElections || [];
+      userJson.votingStatus = voted.length > 0 ? "VOTED" : "NOT_VOTED";
+      userJson.votedElectionDetails = voted.map((id) => ({
+        electionId: id,
+        title: electionTitles.get(id.toString()) || "Unknown election",
+      }));
+      return userJson;
+    });
+
     const total = await User.countDocuments();
 
     res.json({
-      users,
+      users: enrichedUsers,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     });
   } catch (error) {
@@ -287,6 +308,35 @@ const deleteApprovedVoter = async (req, res) => {
   }
 };
 
+const updateUserApproval = async (req, res) => {
+  try {
+    const { approvalStatus } = req.body;
+    if (!["PENDING", "APPROVED", "REJECTED"].includes(approvalStatus)) {
+      return res.status(400).json({ error: "approvalStatus must be PENDING, APPROVED, or REJECTED" });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (user.role === "admin") {
+      return res.status(400).json({ error: "Cannot change approval status of admin users" });
+    }
+
+    user.approvalStatus = approvalStatus;
+    await user.save();
+
+    res.json({
+      message: `User ${approvalStatus === "APPROVED" ? "approved" : approvalStatus === "REJECTED" ? "rejected" : "returned to pending"}`,
+      user: user.toJSON(),
+    });
+  } catch (error) {
+    logger.error("Update user approval error", { error: error.message, requestId: req.id });
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
 module.exports = {
   getDashboardStats,
   getUsers,
@@ -298,4 +348,5 @@ module.exports = {
   getApprovedVoters,
   toggleApprovedVoterEligibility,
   deleteApprovedVoter,
+  updateUserApproval,
 };

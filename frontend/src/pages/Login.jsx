@@ -32,7 +32,7 @@ const Login = () => {
       }
     } catch (err) {
       setError(err.response?.data?.error || "Login failed");
-      if (err.response?.status === 403) {
+      if (err.response?.status === 403 && !err.response?.data?.approvalStatus) {
         setShowVerify(true);
       }
     } finally {

@@ -6,10 +6,12 @@ import {
   UserCheck,
   Vote,
   Play,
-  ClipboardCheck,
+
   ShieldAlert,
   ArrowRight,
   LayoutDashboard,
+  Clock,
+  XCircle,
 } from "lucide-react";
 import api from "../../services/api";
 import Loading from "../../components/Loading";
@@ -92,10 +94,24 @@ const AdminDashboard = () => {
           </div>
         </div>
         <div className="stat-card">
-          <span className="stat-icon stat-icon-muted"><ClipboardCheck size={19} /></span>
+          <span className="stat-icon stat-icon-success"><UserCheck size={19} /></span>
           <div className="stat-inner">
-            <div className="stat-value">{stats.totalApprovedVoters || 0}</div>
+            <div className="stat-value">{stats.approvedVoters ?? stats.totalApprovedVoters ?? 0}</div>
             <div className="stat-label">Approved Voters</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <span className="stat-icon stat-icon-warning"><Clock size={19} /></span>
+          <div className="stat-inner">
+            <div className="stat-value">{stats.pendingApprovals || 0}</div>
+            <div className="stat-label">Pending Approvals</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <span className="stat-icon stat-icon-danger"><XCircle size={19} /></span>
+          <div className="stat-inner">
+            <div className="stat-value">{stats.rejectedVoters || 0}</div>
+            <div className="stat-label">Rejected Voters</div>
           </div>
         </div>
       </div>

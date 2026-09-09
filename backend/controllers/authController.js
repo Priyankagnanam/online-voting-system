@@ -61,7 +61,8 @@ const register = async (req, res) => {
     await sendOTP(cleanEmail, otp, "verification");
 
     res.status(201).json({
-      message: "Registration successful. Please verify your email with the OTP sent to your inbox.",
+      message:
+        "Registration successful. Please verify your email with the OTP sent to your inbox. Your account will be active after admin approval.",
       userId: user._id,
     });
   } catch (error) {
@@ -137,6 +138,15 @@ const login = async (req, res) => {
       return res.status(403).json({ error: "Please verify your email first." });
     }
 
+    if (user.approvalStatus !== "APPROVED") {
+      await recordLoginAttempt(cleanEmail, false, ip, userAgent);
+      const error =
+        user.approvalStatus === "REJECTED"
+          ? "Your registration has not been approved."
+          : "Your registration is awaiting admin approval.";
+      return res.status(403).json({ error, approvalStatus: user.approvalStatus });
+    }
+
     const isMatch = await user.comparePassword(password);
     logger.info("Password check", { attemptedEmail: cleanEmail, isMatch });
     if (!isMatch) {
@@ -161,6 +171,8 @@ const login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        isVerified: user.isVerified,
+        approvalStatus: user.approvalStatus,
       },
     });
   } catch (error) {

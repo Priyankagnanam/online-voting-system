@@ -29,7 +29,7 @@ const Register = () => {
         email,
         password,
       });
-      setSuccess("Registration successful! We've sent a verification code to your email.");
+      setSuccess("Registration successful! We've sent a verification code to your email. Your account will be active after admin approval.");
       setTimeout(() => navigate("/verify-otp", { state: { email } }), 1500);
     } catch (err) {
       setError(err.response?.data?.error || "Registration failed");
