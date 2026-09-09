@@ -370,6 +370,9 @@ const getEmailDiagnostics = async (req, res) => {
 
   results.tcp[`${host}:${ports[0]}`] = await testConnect(host, ports[0]);
   results.tcp[`${host}:${ports[1]}`] = await testConnect(host, ports[1]);
+  results.tcp["smtp-relay.brevo.com:587"] = await testConnect("smtp-relay.brevo.com", 587);
+  results.tcp["smtp-relay.brevo.com:2525"] = await testConnect("smtp-relay.brevo.com", 2525);
+  results.tcp["api.brevo.com:443"] = await testConnect("api.brevo.com", 443);
 
   try {
     const ctrl = new AbortController();
