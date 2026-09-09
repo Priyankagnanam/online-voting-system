@@ -69,7 +69,7 @@ const Register = () => {
             value={regulationNumber}
             onChange={(e) => setRegulationNumber(e.target.value.toUpperCase())}
             required
-            placeholder="Enter your Voter ID / Registration number"
+            placeholder="Enter your Voter ID"
           />
         </div>
         <div className="form-group">
@@ -91,7 +91,7 @@ const Register = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={6}
+              minLength={8}
               autoComplete="new-password"
             />
             <button
@@ -103,7 +103,7 @@ const Register = () => {
               {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
             </button>
           </div>
-          <p className="field-hint">At least 6 characters.</p>
+          <p className="field-hint">At least 8 characters.</p>
         </div>
         <button className="btn btn-primary btn-block" disabled={loading}>
           <UserPlus size={17} />

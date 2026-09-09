@@ -1160,8 +1160,8 @@ td.clickable {
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 2.5rem 3rem 3rem;
+  justify-content: flex-start;
+  padding: 2rem 3rem 3rem;
   color: #fff;
   overflow: hidden;
   background:
@@ -1267,9 +1267,9 @@ td.clickable {
 
 .auth-panel {
   display: flex;
-  align-items: safe center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 3rem 2rem;
+  padding: 2rem 2rem 3rem;
   overflow-y: auto;
   background: var(--bg);
   background-image: radial-gradient(600px 400px at 90% -10%, #e8eefb, transparent 70%);

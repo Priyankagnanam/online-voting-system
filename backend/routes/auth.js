@@ -22,8 +22,8 @@ router.post(
     body("name").trim().isLength({ min: 2 }).withMessage("Name must be at least 2 characters"),
     body("email").isEmail().withMessage("Please enter a valid email"),
     body("password")
-      .isLength({ min: 6 })
-      .withMessage("Password must be at least 6 characters"),
+      .isLength({ min: 8 })
+      .withMessage("Password must be at least 8 characters"),
   ],
   validate,
   register
@@ -78,8 +78,8 @@ router.post(
       .isLength({ min: 6, max: 6 })
       .withMessage("OTP must be 6 digits"),
     body("newPassword")
-      .isLength({ min: 6 })
-      .withMessage("Password must be at least 6 characters"),
+      .isLength({ min: 8 })
+      .withMessage("Password must be at least 8 characters"),
   ],
   validate,
   resetPassword
